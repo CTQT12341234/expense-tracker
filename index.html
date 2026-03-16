@@ -38,7 +38,9 @@
 
   /* METRIC CARDS */
   .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
-  .metric { background: var(--bg2); border-radius: var(--radius); padding: 1rem; }
+  .metric { background: var(--bg2); border-radius: var(--radius); padding: 1rem; cursor: pointer; border: 0.5px solid transparent; transition: all .15s; }
+  .metric:hover { background: var(--bg3); border-color: var(--border2); transform: translateY(-1px); }
+  .metric-hint { font-size: 11px; color: var(--text3); margin-top: 6px; }
   .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
   .metric-value { font-size: 22px; font-weight: 500; }
   .metric-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
@@ -84,8 +86,8 @@
   .tx-meta { font-size: 12px; color: var(--text3); }
   .tx-amt { font-size: 15px; font-weight: 500; }
   .tx-amt.income { color: var(--green); }
-  .tx-del { background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px 6px; font-size: 14px; opacity: 0; transition: opacity .15s; border-radius: var(--radius); }
-  .tx-item:hover .tx-del { opacity: 1; }
+  .tx-del { background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px 6px; font-size: 14px; opacity: 1; border-radius: var(--radius); }
+  .tx-del:hover { background: var(--bg2); color: var(--red); }
   .tx-del:hover { background: var(--bg2); }
 
   /* FILTER */
@@ -127,8 +129,26 @@
 
   .section-label { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
   .empty { text-align: center; padding: 2.5rem; color: var(--text3); font-size: 14px; }
-  .copy-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 20px; border-radius: 999px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .copy-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 20px; border-radius: 999px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 1000; }
   .copy-toast.show { opacity: 1; }
+
+  /* EDIT MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border2); padding: 1.5rem; width: 100%; max-width: 480px; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .modal-header h2 { font-size: 16px; font-weight: 500; }
+  .modal-close { background: none; border: none; font-size: 18px; color: var(--text2); cursor: pointer; padding: 2px 6px; border-radius: var(--radius); line-height: 1; }
+  .modal-close:hover { background: var(--bg2); }
+  .modal-field { margin-bottom: 10px; }
+  .modal-field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .modal-field input, .modal-field select { width: 100%; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1.25rem; }
+  .modal-actions .submit-btn { margin-top: 0; }
+  .btn-danger { flex: 0 0 auto; padding: 10px 16px; border: 0.5px solid var(--red); border-radius: var(--radius); background: none; color: var(--red); font-size: 14px; cursor: pointer; transition: all .15s; }
+  .btn-danger:hover { background: #E24B4A18; }
+  .tx-edit { background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px 6px; font-size: 13px; opacity: 1; border-radius: var(--radius); }
+  .tx-edit:hover { background: var(--bg2); }
 </style>
 </head>
 <body>
@@ -286,7 +306,34 @@
   </div>
 </div>
 
-<div class="copy-toast" id="toast">Copied to clipboard!</div>
+<div class="copy-toast" id="toast">Copied!</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeEdit()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Edit transaction</h2>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="modal-field"><label>Description</label><input type="text" id="e-name" placeholder="Description"/></div>
+    <div class="modal-field"><label>Amount ($)</label><input type="number" id="e-amount" placeholder="0.00" step="0.01" min="0"/></div>
+    <div class="modal-field"><label>Type</label>
+      <select id="e-type"><option value="expense">Expense</option><option value="income">Income</option></select>
+    </div>
+    <div class="modal-field"><label>Category</label>
+      <select id="e-cat">
+        <option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option>
+        <option>Entertainment</option><option>Health</option><option>Housing</option>
+        <option>Utilities</option><option>Salary</option><option>Other</option>
+      </select>
+    </div>
+    <div class="modal-field"><label>Date</label><input type="date" id="e-date"/></div>
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="deleteFromEdit()">Delete</button>
+      <button class="submit-btn" onclick="saveEdit()">Save changes</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
@@ -329,6 +376,21 @@ if (!txs) {
 }
 
 // ── NAV ──────────────────────────────────────────────────────────────
+function goToTransactions(typeFilter) {
+  // Switch to transactions view
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-transactions').classList.add('active');
+  document.querySelectorAll('.nav-btn')[1].classList.add('active');
+  // Apply filter
+  const filterType = document.getElementById('filter-type');
+  const filterCat  = document.getElementById('filter-cat');
+  const search     = document.getElementById('search');
+  if(filterType) filterType.value = typeFilter;
+  if(filterCat)  filterCat.value  = '';
+  if(search)     search.value     = '';
+  renderTransactions();
+}
 function switchView(v, btn) {
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
@@ -354,10 +416,30 @@ function renderDashboard() {
   const expense = mTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
   const balance = income - expense;
   document.getElementById('metrics-row').innerHTML = `
-    <div class="metric"><div class="metric-label">Income this month</div><div class="metric-value green">${fmt(income)}</div><div class="metric-sub">${mTxs.filter(t=>t.type==='income').length} transactions</div></div>
-    <div class="metric"><div class="metric-label">Expenses this month</div><div class="metric-value red">${fmt(expense)}</div><div class="metric-sub">${mTxs.filter(t=>t.type==='expense').length} transactions</div></div>
-    <div class="metric"><div class="metric-label">Net balance</div><div class="metric-value ${balance>=0?'green':'red'}">${(balance<0?'-':'')+fmt(balance)}</div><div class="metric-sub">This month</div></div>
-    <div class="metric"><div class="metric-label">Total transactions</div><div class="metric-value">${txs.length}</div><div class="metric-sub">All time</div></div>`;
+    <div class="metric" onclick="goToTransactions('income')">
+      <div class="metric-label">Income this month</div>
+      <div class="metric-value green">${fmt(income)}</div>
+      <div class="metric-sub">${mTxs.filter(t=>t.type==='income').length} transactions</div>
+      <div class="metric-hint">View income →</div>
+    </div>
+    <div class="metric" onclick="goToTransactions('expense')">
+      <div class="metric-label">Expenses this month</div>
+      <div class="metric-value red">${fmt(expense)}</div>
+      <div class="metric-sub">${mTxs.filter(t=>t.type==='expense').length} transactions</div>
+      <div class="metric-hint">View expenses →</div>
+    </div>
+    <div class="metric" onclick="goToTransactions('')">
+      <div class="metric-label">Net balance</div>
+      <div class="metric-value ${balance>=0?'green':'red'}">${(balance<0?'-':'')+fmt(balance)}</div>
+      <div class="metric-sub">This month</div>
+      <div class="metric-hint">View all →</div>
+    </div>
+    <div class="metric" onclick="goToTransactions('')">
+      <div class="metric-label">Total transactions</div>
+      <div class="metric-value">${txs.length}</div>
+      <div class="metric-sub">All time</div>
+      <div class="metric-hint">View all →</div>
+    </div>`;
   renderCatChart(mTxs);
   renderTrendChart();
   const rec = [...txs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
@@ -407,6 +489,7 @@ function txHTML(t) {
       <div class="tx-meta">${t.cat} · ${t.date}</div>
     </div>
     <div class="tx-amt ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+    <button class="tx-edit" onclick="openEdit(${t.id})" title="Edit">✏️</button>
     <button class="tx-del" onclick="deleteTx(${t.id})" title="Delete">✕</button>
   </div>`;
 }
@@ -536,7 +619,49 @@ function addFromVoice() {
   save(); document.getElementById('voice-preview').style.display='none'; renderDashboard();
 }
 
-// ── BUDGET ───────────────────────────────────────────────────────────
+// ── EDIT MODAL ───────────────────────────────────────────────────────
+let editingId = null;
+
+function openEdit(id) {
+  const t = txs.find(x=>x.id===id);
+  if(!t) return;
+  editingId = id;
+  document.getElementById('e-name').value   = t.name;
+  document.getElementById('e-amount').value = t.amount;
+  document.getElementById('e-type').value   = t.type;
+  document.getElementById('e-cat').value    = t.cat;
+  document.getElementById('e-date').value   = t.date;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingId = null;
+}
+
+function saveEdit() {
+  const name   = document.getElementById('e-name').value.trim();
+  const amount = parseFloat(document.getElementById('e-amount').value);
+  if(!name || isNaN(amount) || amount<=0) { alert('Please enter a valid description and amount.'); return; }
+  const idx = txs.findIndex(x=>x.id===editingId);
+  if(idx===-1) return;
+  txs[idx] = { ...txs[idx], name, amount,
+    type: document.getElementById('e-type').value,
+    cat:  document.getElementById('e-cat').value,
+    date: document.getElementById('e-date').value || today()
+  };
+  save(); closeEdit(); showToast('Transaction updated!');
+  renderDashboard(); renderTransactions();
+}
+
+function deleteFromEdit() {
+  if(!confirm('Delete this transaction?')) return;
+  txs = txs.filter(x=>x.id!==editingId);
+  save(); closeEdit(); showToast('Deleted.');
+  renderDashboard(); renderTransactions();
+}
+
+
 function renderBudget() {
   const m=thisMonth();
   document.getElementById('budget-list').innerHTML=CATS.filter(c=>c!=='Salary').map(cat=>{
