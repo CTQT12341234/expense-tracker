@@ -293,6 +293,35 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 
 
 
+
+/* ALLOCATION SUMMARY CARDS */
+.alloc-summary-section{margin-bottom:1.25rem;}
+.alloc-summary-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.alloc-summary-header-left h3{font-size:14px;font-weight:600;margin-bottom:2px;}
+.alloc-summary-header-left p{font-size:12px;color:var(--text2);}
+.alloc-summary-income-pill{font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--green-bg);color:var(--teal);border:1.5px solid var(--green-border);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.alloc-summary-income-pill:hover{background:var(--teal);color:#fff;}
+.alloc-summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.alloc-sum-card{border-radius:var(--radius-lg);padding:1rem 1.1rem;border:1.5px solid transparent;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.alloc-sum-card-accent{position:absolute;top:0;left:0;width:4px;height:100%;border-radius:2px 0 0 2px;}
+.alloc-sum-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.alloc-sum-pct-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-bottom:8px;}
+.alloc-sum-allocated{font-size:20px;font-weight:800;line-height:1.1;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.alloc-sum-sub{font-size:11px;color:var(--text2);margin-bottom:8px;}
+.alloc-sum-bar-bg{height:6px;background:rgba(0,0,0,.07);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+[data-theme="dark"] .alloc-sum-bar-bg{background:rgba(255,255,255,.08);}
+.alloc-sum-bar{height:100%;border-radius:3px;transition:width .6s ease;}
+.alloc-sum-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+.alloc-sum-used{font-size:11px;color:var(--text2);}
+.alloc-sum-remaining{font-size:11px;font-weight:600;}
+.alloc-sum-no-income{font-size:12px;color:var(--text3);font-style:italic;text-align:center;padding:.5rem 0;}
+.alloc-income-input-row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+.alloc-income-input-row input{flex:1;min-width:130px;font-size:14px;font-weight:600;}
+.alloc-income-input-row button{padding:8px 14px;border:none;border-radius:var(--radius);background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.alloc-income-input-row button:hover{background:#3451c7;}
+.alloc-income-input-row .use-month-btn{background:var(--surface2);border:1.5px solid var(--border2);color:var(--text2);}
+.alloc-income-input-row .use-month-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-bg);}
+
 /* ALLOCATION TRACKER */
 .alloc-tracker{margin-bottom:1.25rem;}
 .alloc-tracker-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
@@ -609,6 +638,25 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 
   <!-- ═══ SAVINGS ═══ -->
   <div id="view-savings" class="view">
+
+    <!-- ── Allocation Summary ── -->
+    <div class="alloc-summary-section">
+      <div class="alloc-summary-header">
+        <div class="alloc-summary-header-left">
+          <h3>💡 This month's allocation</h3>
+          <p>How your income is divided across each bucket</p>
+        </div>
+        <button class="alloc-summary-income-pill" onclick="document.getElementById('alloc-summary-income').focus();document.getElementById('alloc-summary-income').select()" id="alloc-income-pill-btn">Set income ↓</button>
+      </div>
+      <div class="alloc-income-input-row" style="margin-bottom:12px">
+        <input type="number" id="alloc-summary-income" placeholder="Enter this month's income…" min="0" step="0.01" oninput="renderAllocSummaryCards()"/>
+        <button class="use-month-btn" onclick="prefillMonthIncome()">Use logged income</button>
+      </div>
+      <div id="alloc-summary-cards" class="alloc-summary-cards">
+        <div class="alloc-sum-no-income">Enter your income above to see the breakdown per bucket</div>
+      </div>
+    </div>
+
 
     <!-- Income Allocation -->
     <div class="alloc-card" id="alloc-card">
@@ -1283,8 +1331,76 @@ function addGoal(){
 function deleteGoal(id){if(!confirm('Delete this goal?'))return;savGoals=savGoals.filter(g=>g.id!==id);save();renderSavings();showToast('Goal removed');}
 function deleteSavingsTx(id){if(!confirm('Delete this entry?'))return;savingsTxs=savingsTxs.filter(t=>t.id!==id);save();renderSavings();renderDashboard();showToast('Deleted');}
 
+
+// ─── ALLOC SUMMARY CARDS (top of savings) ────────────────────────────────────
+function prefillMonthIncome(){
+  const m=thisMonth();
+  const income=txs.filter(t=>t.type==='income'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
+  const inp=document.getElementById('alloc-summary-income');
+  if(inp){inp.value=income||'';renderAllocSummaryCards();}
+  if(income) showToast('Using '+fmt(income)+' income for '+new Date().toLocaleString('default',{month:'long'}));
+  else showToast('No income logged this month yet');
+}
+
+function renderAllocSummaryCards(){
+  const container=document.getElementById('alloc-summary-cards');
+  if(!container)return;
+  const incomeVal=parseFloat(document.getElementById('alloc-summary-income')?.value)||0;
+  const pill=document.getElementById('alloc-income-pill-btn');
+
+  if(!incomeVal){
+    container.innerHTML='<div class="alloc-sum-no-income">Enter your income above to see the breakdown per bucket</div>';
+    if(pill)pill.textContent='Set income ↓';
+    return;
+  }
+
+  if(pill)pill.textContent='Income: '+fmt(incomeVal);
+
+  const m=thisMonth();
+  const monthExpense=txs.filter(t=>t.type==='expense'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
+  const monthSaved=savingsTxs.filter(t=>t.type==='deposit'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
+  const monthInvested=investments.filter(i=>i.date.startsWith(m)).reduce((s,i)=>s+i.amount,0);
+
+  container.innerHTML=savAllocs.map(a=>{
+    const allocated=incomeVal*(a.pct/100);
+    const n=a.name.toLowerCase();
+    // Determine "used" based on bucket type
+    let used=0;
+    if(n.includes('sav'))          used=monthSaved;
+    else if(n.includes('invest'))  used=monthInvested;
+    else                           used=monthExpense; // needs/wants both map to expenses
+
+    const pct=allocated>0?Math.min(100,Math.round(used/allocated*100)):0;
+    const remaining=allocated-used;
+    const isOver=used>allocated;
+    const barColor=isOver?'#f03e3e':pct>=80?'#f59f00':a.color;
+    const bgAlpha='18';
+    const borderAlpha='44';
+
+    // Status text
+    const statusText=isOver
+      ? '⚠️ Over by '+fmt(used-allocated)
+      : pct===0 ? 'Not yet used'
+      : '✅ '+fmt(remaining)+' left';
+
+    return '<div class="alloc-sum-card" style="background:'+a.color+bgAlpha+';border-color:'+a.color+borderAlpha+'">'+
+      '<div class="alloc-sum-card-accent" style="background:'+a.color+'"></div>'+
+      '<div class="alloc-sum-name" style="color:'+a.color+'">'+a.name+'</div>'+
+      '<div class="alloc-sum-pct-badge" style="background:'+a.color+'22;color:'+a.color+'">'+a.pct+'% of income</div>'+
+      '<div class="alloc-sum-allocated" style="color:'+a.color+'">'+fmt(allocated)+'</div>'+
+      '<div class="alloc-sum-sub">Allocated this month</div>'+
+      '<div class="alloc-sum-bar-bg"><div class="alloc-sum-bar" style="width:'+pct+'%;background:'+barColor+'"></div></div>'+
+      '<div class="alloc-sum-footer">'+
+        '<div class="alloc-sum-used" style="color:var(--text2)">Used: <strong>'+fmt(used)+'</strong></div>'+
+        '<div class="alloc-sum-remaining" style="color:'+barColor+'">'+statusText+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
 function renderSavings(){
   renderAllocation();
+  renderAllocSummaryCards();
   const totalDep=savingsTxs.filter(t=>t.type==='deposit').reduce((s,t)=>s+t.amount,0);
   const totalWith=savingsTxs.filter(t=>t.type==='withdrawal').reduce((s,t)=>s+t.amount,0);
   const bal=totalDep-totalWith;
