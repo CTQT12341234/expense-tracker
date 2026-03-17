@@ -913,6 +913,45 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
   </div>
 </div>
 
+
+<!-- INVESTMENT EDIT MODAL -->
+<div class="modal-overlay" id="inv-edit-modal" onclick="if(event.target===this)closeEditInvestment()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📈 Edit Investment</h2>
+      <button class="modal-close" onclick="closeEditInvestment()">✕</button>
+    </div>
+    <div class="modal-field">
+      <label>Asset name</label>
+      <input type="text" id="ei-name" placeholder="e.g. VDHG ETF, BTC"/>
+    </div>
+    <div class="modal-field">
+      <label>Amount</label>
+      <input type="number" id="ei-amount" step="0.01" min="0"/>
+    </div>
+    <div class="modal-field">
+      <label>Type</label>
+      <select id="ei-type">
+        <option value="buy">🟢 Buy (full)</option>
+        <option value="partial">🟡 Partial buy</option>
+        <option value="sell">🔴 Sell</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Notes</label>
+      <input type="text" id="ei-notes" placeholder="e.g. DCA into index fund"/>
+    </div>
+    <div class="modal-field">
+      <label>Date</label>
+      <input type="date" id="ei-date"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="deleteFromEditInvestment()">🗑 Delete</button>
+      <button class="submit-btn" onclick="saveEditInvestment()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- EDIT MODAL -->
@@ -1833,7 +1872,7 @@ function renderInvestments(){
   const listEl=document.getElementById('inv-list');if(!listEl)return;
   if(!investments.length){listEl.innerHTML=`<div class="empty" style="padding:1.5rem"><div class="empty-icon">📈</div>No investments recorded yet.</div>`;return;}
   listEl.innerHTML=[...investments].sort((a,b)=>b.date.localeCompare(a.date)).map(i=>`
-    <div class="inv-item">
+    <div class="inv-item" onclick="openEditInvestment(${i.id})" style="cursor:pointer" title="Tap to edit">
       <div class="inv-icon">${i.itype==='sell'?'📉':i.itype==='partial'?'📊':'📈'}</div>
       <div class="inv-info">
         <div class="inv-name">${i.name}</div>
@@ -1845,7 +1884,7 @@ function renderInvestments(){
       </div>
       <div class="inv-right">
         <div class="inv-amt ${i.itype==='sell'?'sell':''}">${i.itype==='sell'?'+':'-'}${fmt(i.amount)}</div>
-        <button class="inv-del" onclick="deleteInvestment(${i.id})">🗑</button>
+        <button class="inv-del" onclick="event.stopPropagation();deleteInvestment(${i.id})" title="Delete">🗑</button>
       </div>
     </div>`).join('');
 }
@@ -1924,6 +1963,57 @@ function renderBucketRules(){
       '<button data-rid="'+r.id+'" onclick="deleteBucketRule(this.dataset.rid)" style="background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px;font-size:13px;color:var(--text3)" title="Remove">✕</button>'+
     '</div>';
   }).join('');
+}
+
+// ─── INVESTMENT EDIT MODAL ────────────────────────────────────────────────────
+let editingInvId = null;
+
+function openEditInvestment(id){
+  const inv = investments.find(i=>i.id===id);
+  if(!inv) return;
+  editingInvId = id;
+  document.getElementById('ei-name').value   = inv.name||'';
+  document.getElementById('ei-amount').value = inv.amount||'';
+  document.getElementById('ei-type').value   = inv.itype||'buy';
+  document.getElementById('ei-notes').value  = inv.notes||'';
+  document.getElementById('ei-date').value   = inv.date||today();
+  document.getElementById('inv-edit-modal').classList.add('open');
+}
+
+function closeEditInvestment(){
+  document.getElementById('inv-edit-modal').classList.remove('open');
+  editingInvId = null;
+}
+
+function saveEditInvestment(){
+  const name   = document.getElementById('ei-name').value.trim();
+  const amount = parseFloat(document.getElementById('ei-amount').value);
+  if(!name || isNaN(amount) || amount<=0){showToast('⚠️ Enter a valid name and amount');return;}
+  const idx = investments.findIndex(i=>i.id===editingInvId);
+  if(idx===-1) return;
+  investments[idx] = {
+    ...investments[idx],
+    name,
+    amount,
+    itype: document.getElementById('ei-type').value,
+    notes: document.getElementById('ei-notes').value.trim(),
+    date:  document.getElementById('ei-date').value || today()
+  };
+  save();
+  closeEditInvestment();
+  showToast('✅ Investment updated!');
+  renderSavings();
+  renderDashboard();
+}
+
+function deleteFromEditInvestment(){
+  if(!confirm('Delete this investment record?')) return;
+  investments = investments.filter(i=>i.id!==editingInvId);
+  save();
+  closeEditInvestment();
+  showToast('Investment deleted');
+  renderSavings();
+  renderDashboard();
 }
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
