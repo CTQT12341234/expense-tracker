@@ -341,6 +341,33 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 .alloc-track-status{font-size:11px;color:var(--text3);margin-top:3px;}
 
 
+
+/* PIN LOCK SCREEN */
+.pin-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
+.pin-screen.hidden{display:none;}
+.pin-logo{font-size:48px;margin-bottom:8px;}
+.pin-title{font-size:20px;font-weight:700;margin-bottom:4px;}
+.pin-subtitle{font-size:13px;color:var(--text2);margin-bottom:2rem;text-align:center;}
+.pin-dots{display:flex;gap:14px;margin-bottom:2rem;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all .15s;}
+.pin-dot.filled{background:var(--blue);border-color:var(--blue);}
+.pin-dot.error{background:var(--red);border-color:var(--red);}
+.pin-dot.success{background:var(--green);border-color:var(--green);}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;width:100%;}
+.pin-key{height:64px;border-radius:var(--radius-lg);border:1.5px solid var(--border);background:var(--surface);font-size:22px;font-weight:600;cursor:pointer;transition:all .12s;color:var(--text);box-shadow:var(--shadow);}
+.pin-key:hover{background:var(--blue-bg);border-color:var(--blue);}
+.pin-key:active{transform:scale(.94);background:var(--blue);color:#fff;}
+.pin-key.pin-del{font-size:18px;}
+.pin-key.pin-empty{border:none;background:none;box-shadow:none;cursor:default;}
+.pin-error-msg{font-size:13px;color:var(--red);min-height:20px;margin-top:-1rem;margin-bottom:1rem;text-align:center;}
+.pin-forgot{font-size:12px;color:var(--text3);margin-top:1.5rem;cursor:pointer;text-decoration:underline;}
+.pin-forgot:hover{color:var(--red);}
+
+/* PIN Setup in Settings */
+.pin-setup-row{display:flex;flex-direction:column;gap:8px;}
+.pin-setup-inputs{display:flex;gap:8px;}
+.pin-setup-inputs input{flex:1;max-width:120px;font-size:18px;font-weight:700;letter-spacing:6px;text-align:center;}
+
 /* DASHBOARD CUSTOMISER */
 .dash-customize-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border:1.5px solid var(--border2);border-radius:999px;background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:1rem;}
 .dash-customize-btn:hover{border-color:var(--blue);color:var(--blue);}
@@ -480,7 +507,37 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- PIN LOCK SCREEN -->
+<div class="pin-screen hidden" id="pin-screen">
+  <div class="pin-logo">💰</div>
+  <div class="pin-title">Expense Tracker</div>
+  <div class="pin-subtitle" id="pin-subtitle">Enter your PIN to continue</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-error-msg" id="pin-error"></div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key pin-empty" disabled></button>
+    <button class="pin-key" onclick="pinKey('0')">0</button>
+    <button class="pin-key pin-del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-forgot" onclick="pinForgot()">Forgot PIN? Reset app data</div>
+</div>
+
+<div id="app-content"><div class="app">
 
   <!-- HEADER -->
   <div class="header">
@@ -650,47 +707,53 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
   <!-- ═══ TRANSACTIONS ═══ -->
   <div id="view-transactions" class="view">
     <div class="filter-bar">
-      <!-- Row 1: Search + Category + Type -->
+      <!-- Row 1: Search + quick filters -->
       <div class="filter-row-1">
-        <div class="search-wrap">
+        <div class="search-wrap" style="flex:2">
           <span class="search-icon">🔍</span>
           <input type="text" id="search" placeholder="Search transactions…" oninput="renderTransactions()"/>
         </div>
-        <select id="filter-cat" onchange="renderTransactions()" style="flex:1;min-width:120px">
-          <option value="">All categories</option>
-          <option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option>
-          <option>Entertainment</option><option>Health</option><option>Housing</option>
-          <option>Utilities</option><option>Salary</option><option>Other</option>
-        </select>
-        <select id="filter-type" onchange="renderTransactions()" style="max-width:120px">
+        <select id="filter-type" onchange="renderTransactions()" style="max-width:115px">
           <option value="">All types</option><option value="expense">Expense</option><option value="income">Income</option>
         </select>
-        <select id="filter-bucket" onchange="window._activeBucketFilter='';renderTransactions()" style="max-width:140px">
+        <select id="filter-bucket" onchange="window._activeBucketFilter='';renderTransactions()" style="max-width:130px">
           <option value="">All buckets</option>
           <option value="Needs">🔴 Needs</option>
           <option value="Wants">🟣 Wants</option>
           <option value="Investment">🟢 Investment</option>
           <option value="Savings">🔵 Savings</option>
-          <option value="">No bucket</option>
         </select>
+        <button class="clear-filter-btn" onclick="toggleAdvancedFilters()" id="adv-filter-btn" style="white-space:nowrap">⚙️ More</button>
       </div>
-      <!-- Row 2: Date range + Amount range + Sort -->
-      <div class="filter-row-2">
-        <span class="filter-label">Date</span>
-        <input type="date" id="filter-from" onchange="renderTransactions()" title="From date"/>
-        <span class="filter-label">→</span>
-        <input type="date" id="filter-to" onchange="renderTransactions()" title="To date"/>
-        <span class="filter-label">Amount</span>
-        <input type="number" id="filter-amt-min" placeholder="Min" min="0" onchange="renderTransactions()" title="Min amount"/>
-        <span class="filter-label">–</span>
-        <input type="number" id="filter-amt-max" placeholder="Max" min="0" onchange="renderTransactions()" title="Max amount"/>
-        <select id="filter-sort" onchange="renderTransactions()" style="max-width:165px">
-          <option value="date-desc">Date: newest first</option>
-          <option value="date-asc">Date: oldest first</option>
-          <option value="amt-asc">Amount: low → high</option>
-          <option value="amt-desc">Amount: high → low</option>
-        </select>
-        <button class="clear-filter-btn" onclick="clearFilters()">Clear</button>
+      <!-- Advanced filters (collapsed by default) -->
+      <div id="adv-filters" style="display:none;margin-top:10px;display:none">
+        <div class="filter-row-2" style="margin-bottom:8px">
+          <span class="filter-label">Category</span>
+          <select id="filter-cat" onchange="renderTransactions()" style="flex:1;min-width:110px">
+            <option value="">All categories</option>
+            <option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option>
+            <option>Entertainment</option><option>Health</option><option>Housing</option>
+            <option>Utilities</option><option>Salary</option><option>Other</option>
+          </select>
+          <span class="filter-label">Sort</span>
+          <select id="filter-sort" onchange="renderTransactions()" style="max-width:160px">
+            <option value="date-desc">Date: newest</option>
+            <option value="date-asc">Date: oldest</option>
+            <option value="amt-asc">Amount: low→high</option>
+            <option value="amt-desc">Amount: high→low</option>
+          </select>
+        </div>
+        <div class="filter-row-2">
+          <span class="filter-label">Date</span>
+          <input type="date" id="filter-from" onchange="renderTransactions()" style="max-width:145px"/>
+          <span class="filter-label">→</span>
+          <input type="date" id="filter-to"   onchange="renderTransactions()" style="max-width:145px"/>
+          <span class="filter-label">$</span>
+          <input type="number" id="filter-amt-min" placeholder="Min" min="0" onchange="renderTransactions()" style="max-width:90px"/>
+          <span class="filter-label">–</span>
+          <input type="number" id="filter-amt-max" placeholder="Max" min="0" onchange="renderTransactions()" style="max-width:90px"/>
+          <button class="clear-filter-btn" onclick="clearFilters()">Clear all</button>
+        </div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div class="tx-count" id="tx-count" style="margin-bottom:0;flex:1"></div><div id="bucket-filter-indicator" style="display:none;font-size:12px;font-weight:600;padding:3px 12px;border-radius:999px;cursor:pointer" onclick="clearBucketFilter()"></div></div>
@@ -860,6 +923,26 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
     <button class="settings-close" onclick="closeSettings()">✕</button>
   </div>
 
+  <div class="settings-section-title">🔒 PIN lock</div>
+  <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+    <div class="setting-info">
+      <h4>App PIN</h4>
+      <p id="pin-status-text">No PIN set — app opens without a lock</p>
+    </div>
+    <div class="pin-setup-row" id="pin-setup-area">
+      <div style="font-size:12px;color:var(--text2)" id="pin-setup-label">Set a 4-digit PIN:</div>
+      <div class="pin-setup-inputs">
+        <input type="password" inputmode="numeric" maxlength="4" id="pin-new" placeholder="New PIN" pattern="[0-9]{4}"/>
+        <input type="password" inputmode="numeric" maxlength="4" id="pin-confirm" placeholder="Confirm"/>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="savePIN()" style="padding:8px 16px;border:none;border-radius:var(--radius);background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Set PIN</button>
+        <button id="pin-remove-btn" onclick="removePIN()" style="display:none;padding:8px 16px;border:1.5px solid var(--red);border-radius:var(--radius);background:none;color:var(--red);font-size:13px;font-weight:500;cursor:pointer">Remove PIN</button>
+      </div>
+      <div id="pin-setup-msg" style="font-size:12px;min-height:16px"></div>
+    </div>
+  </div>
+
   <div class="settings-section-title">Appearance</div>
   <div class="setting-row">
     <div class="setting-info"><h4>Dark mode</h4><p>Switch between light and dark</p></div>
@@ -961,6 +1044,16 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
     <div class="modal-field">
       <label>Notes</label>
       <input type="text" id="ei-notes" placeholder="e.g. DCA into index fund"/>
+    </div>
+    <div class="modal-field">
+      <label>Bucket</label>
+      <select id="ei-bucket">
+        <option value="Investment">🟢 Investment</option>
+        <option value="Needs">🔴 Needs</option>
+        <option value="Wants">🟣 Wants</option>
+        <option value="Savings">🔵 Savings</option>
+        <option value="">No bucket</option>
+      </select>
     </div>
     <div class="modal-field">
       <label>Date</label>
@@ -1242,6 +1335,7 @@ function setCurrency(v){
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 function openSettings(){
   renderBucketRules();
+  refreshPinSettingsUI();
   document.getElementById('settings-overlay').classList.add('open');
   document.getElementById('settings-panel').classList.add('open');
   const tog=document.getElementById('dark-mode-toggle');if(tog)tog.checked=theme==='dark';
@@ -1275,6 +1369,26 @@ function filteredForExport(){
   const {from,to}=getExportRange();
   let list=[...txs];
   const activeBucket=window._activeBucketFilter||document.getElementById('filter-bucket')?.value||'';
+
+  // If filtering by Investment bucket (or no bucket filter), merge investment records
+  const showInvestments = activeBucket==='Investment' || activeBucket==='';
+  if(showInvestments && investments.length){
+    const invAsTx = investments.map(i=>({
+      id: 'inv_'+i.id,
+      name: i.name + (i.notes?' · '+i.notes:''),
+      amount: i.amount,
+      type: i.itype==='sell'?'income':'expense',
+      cat: 'Investment',
+      date: i.date,
+      icon: i.itype==='sell'?'📉':i.itype==='partial'?'📊':'📈',
+      bucket: i.bucket||'Investment',
+      _isInv: true,
+      _invId: i.id,
+      _itype: i.itype
+    }));
+    list = [...list, ...invAsTx];
+  }
+
   if(activeBucket){list=list.filter(t=>(t.bucket||autoBucket(t.name))===activeBucket);}
   if(from)list=list.filter(t=>t.date>=from);
   if(to)  list=list.filter(t=>t.date<=to);
@@ -1499,6 +1613,27 @@ function applyAutoBucket(nameInputId, bucketSelectId){
 function bucketColor(b){const m={'Needs':'#f03e3e','Wants':'#7950f2','Investment':'#12b886','Savings':'#1098ad'};return m[b]||'#868e96';}
 function bucketIcon(b){const m={'Needs':'🔴','Wants':'🟣','Investment':'🟢','Savings':'🔵'};return m[b]||'📦';}
 function txHTML(t){
+  // Investment record — special rendering
+  if(t._isInv){
+    const itypeLabel=t._itype==='sell'?'Sell':t._itype==='partial'?'Partial buy':'Full buy';
+    const col=t._itype==='sell'?'#f03e3e':t._itype==='partial'?'#f59f00':'#12b886';
+    return `<div class="tx-item" style="border-left:4px solid var(--purple);background:linear-gradient(135deg,var(--purple-bg),var(--surface))" onclick="openEditInvestment(${t._invId})">
+      <div class="tx-icon" style="background:var(--purple-bg)">${t.icon}</div>
+      <div class="tx-info">
+        <div class="tx-name">${t.name}</div>
+        <div class="tx-meta">
+          <span style="background:var(--purple-bg);color:var(--purple);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700">📈 Investment</span>
+          <span style="background:${col}22;color:${col};border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700">${itypeLabel}</span>
+        </div>
+      </div>
+      <div class="tx-right">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+          <div class="tx-amt ${t._itype==='sell'?'income':''}" style="${t._itype!=='sell'?'color:var(--purple)':''}">${t._itype==='sell'?'+':'-'}${fmt(t.amount)}</div>
+          <div style="font-size:10px;color:var(--text3)">${t.date}</div>
+        </div>
+      </div>
+    </div>`;
+  }
   const col=catColor(t.cat);const isR=recurTxs.some(r=>r.name===t.name&&r.cat===t.cat);
   return `<div class="tx-item${isR?' recurring-tx':''}" onclick="openEdit(${t.id})">
     <div class="tx-icon" style="background:${col}22">${txIcon(t)}</div>
@@ -1547,6 +1682,26 @@ function renderTransactions(){
   const sort=document.getElementById('filter-sort')?.value||'date-desc';
   let list=[...txs];
   const activeBucket=window._activeBucketFilter||document.getElementById('filter-bucket')?.value||'';
+
+  // If filtering by Investment bucket (or no bucket filter), merge investment records
+  const showInvestments = activeBucket==='Investment' || activeBucket==='';
+  if(showInvestments && investments.length){
+    const invAsTx = investments.map(i=>({
+      id: 'inv_'+i.id,
+      name: i.name + (i.notes?' · '+i.notes:''),
+      amount: i.amount,
+      type: i.itype==='sell'?'income':'expense',
+      cat: 'Investment',
+      date: i.date,
+      icon: i.itype==='sell'?'📉':i.itype==='partial'?'📊':'📈',
+      bucket: i.bucket||'Investment',
+      _isInv: true,
+      _invId: i.id,
+      _itype: i.itype
+    }));
+    list = [...list, ...invAsTx];
+  }
+
   if(activeBucket){list=list.filter(t=>(t.bucket||autoBucket(t.name))===activeBucket);}
   if(q)     list=list.filter(t=>t.name.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q));
   if(fc)    list=list.filter(t=>t.cat===fc);
@@ -1559,10 +1714,19 @@ function renderTransactions(){
   else if(sort==='amt-asc')  list.sort((a,b)=>a.amount-b.amount);
   else if(sort==='amt-desc') list.sort((a,b)=>b.amount-a.amount);
   const ce=document.getElementById('tx-count');
-  if(ce)ce.textContent=list.length===txs.length?list.length+' transactions':'Showing '+list.length+' of '+txs.length;
+  const baseTotal=activeBucket===''?txs.length+investments.length:txs.length;
+  if(ce)ce.textContent=list.length===baseTotal?list.length+' entries':'Showing '+list.length+' of '+baseTotal;
   const bi=document.getElementById('bucket-filter-indicator');
   if(bi){if(activeBucket&&activeBucket!==''){bi.style.display='inline-flex';bi.textContent=bucketIcon(activeBucket)+' '+activeBucket+' ✕';bi.style.background=bucketColor(activeBucket)+'22';bi.style.color=bucketColor(activeBucket);}else{bi.style.display='none';}}
   document.getElementById('tx-list').innerHTML=list.length?list.map(txHTML).join(''):`<div class="empty"><div class="empty-icon">🔍</div>No transactions match your filters.</div>`;
+}
+
+function toggleAdvancedFilters(){
+  const el = document.getElementById('adv-filters');
+  const btn = document.getElementById('adv-filter-btn');
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '⚙️ More' : '⚙️ Less';
 }
 function clearBucketFilter(){window._activeBucketFilter='';const bi=document.getElementById('bucket-filter-indicator');if(bi)bi.style.display='none';const fb=document.getElementById('filter-bucket');if(fb)fb.value='';renderTransactions();}
 function clearFilters(){ window._activeBucketFilter='';const fb=document.getElementById('filter-bucket');if(fb)fb.value='';
@@ -1954,7 +2118,7 @@ function addInvestment(){
   const itype=document.getElementById('inv-type').value;
   const notes=document.getElementById('inv-notes').value.trim();
   const date=document.getElementById('inv-date').value||today();
-  investments.unshift({id:Date.now(),name,amount,itype,notes,date});
+  investments.unshift({id:Date.now(),name,amount,itype,notes,date,bucket:'Investment'});
   save();
   document.getElementById('inv-name').value='';document.getElementById('inv-amount').value='';document.getElementById('inv-notes').value='';
   showToast('✅ Investment recorded!');renderSavings();renderDashboard();
@@ -2068,6 +2232,124 @@ function renderBucketRules(){
 }
 
 
+
+// ─── PIN LOCK ─────────────────────────────────────────────────────────────────
+let _pinBuffer = '';
+let _pinMode = 'unlock'; // 'unlock' | 'setup'
+
+function pinHashSimple(pin){
+  // Simple deterministic hash — not cryptographic but sufficient for local PIN
+  let h = 0;
+  for(let i=0;i<pin.length;i++){ h = ((h<<5)-h)+pin.charCodeAt(i); h|=0; }
+  return 'ph_'+Math.abs(h).toString(36)+'_'+pin.length;
+}
+
+function initPinLock(){
+  const storedHash = localStorage.getItem('xp_pin');
+  if(storedHash){
+    // Show lock screen
+    _pinMode = 'unlock';
+    document.getElementById('pin-screen').classList.remove('hidden');
+    document.getElementById('pin-subtitle').textContent = 'Enter your PIN to continue';
+    document.getElementById('app-content').style.display = 'none';
+  }
+}
+
+function pinKey(digit){
+  if(_pinBuffer.length >= 4) return;
+  _pinBuffer += digit;
+  updatePinDots();
+  if(_pinBuffer.length === 4){
+    setTimeout(()=>checkPin(), 80);
+  }
+}
+
+function pinDel(){
+  _pinBuffer = _pinBuffer.slice(0,-1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  resetPinDotColors();
+}
+
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const dot = document.getElementById('pd'+i);
+    dot.classList.toggle('filled', i < _pinBuffer.length);
+  }
+}
+
+function resetPinDotColors(){
+  for(let i=0;i<4;i++){
+    const dot = document.getElementById('pd'+i);
+    dot.classList.remove('error','success');
+  }
+}
+
+function checkPin(){
+  const stored = localStorage.getItem('xp_pin');
+  const entered = pinHashSimple(_pinBuffer);
+  if(entered === stored){
+    // Success
+    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('success');
+    setTimeout(()=>{
+      document.getElementById('pin-screen').classList.add('hidden');
+      document.getElementById('app-content') && (document.getElementById('app-content').style.display='');
+    }, 400);
+  } else {
+    // Fail
+    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('error');
+    document.getElementById('pin-error').textContent = 'Incorrect PIN — try again';
+    setTimeout(()=>{
+      _pinBuffer = '';
+      updatePinDots();
+      resetPinDotColors();
+      document.getElementById('pin-error').textContent = '';
+    }, 900);
+  }
+}
+
+function pinForgot(){
+  if(confirm('This will clear ALL your app data and remove the PIN. Are you sure?')){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+// Settings PIN management
+function savePIN(){
+  const newPin    = document.getElementById('pin-new').value;
+  const confirmPin= document.getElementById('pin-confirm').value;
+  const msg = document.getElementById('pin-setup-msg');
+  if(!/^\d{4}$/.test(newPin)){msg.textContent='⚠️ PIN must be exactly 4 digits';msg.style.color='var(--red)';return;}
+  if(newPin !== confirmPin){msg.textContent='⚠️ PINs do not match';msg.style.color='var(--red)';return;}
+  localStorage.setItem('xp_pin', pinHashSimple(newPin));
+  document.getElementById('pin-new').value='';
+  document.getElementById('pin-confirm').value='';
+  msg.textContent='✅ PIN set successfully!';
+  msg.style.color='var(--green)';
+  refreshPinSettingsUI();
+  showToast('🔒 PIN lock enabled');
+}
+
+function removePIN(){
+  if(!confirm('Remove PIN lock? Anyone with access to your device can open the app.'))return;
+  localStorage.removeItem('xp_pin');
+  refreshPinSettingsUI();
+  showToast('🔓 PIN lock removed');
+}
+
+function refreshPinSettingsUI(){
+  const has = !!localStorage.getItem('xp_pin');
+  const statusEl = document.getElementById('pin-status-text');
+  const removeBtn = document.getElementById('pin-remove-btn');
+  const labelEl   = document.getElementById('pin-setup-label');
+  if(statusEl) statusEl.textContent = has ? '🔒 PIN is set — app locks on next open' : '🔓 No PIN set — app opens without a lock';
+  if(removeBtn) removeBtn.style.display = has ? '' : 'none';
+  if(labelEl)   labelEl.textContent = has ? 'Change PIN:' : 'Set a 4-digit PIN:';
+  const msg = document.getElementById('pin-setup-msg');
+  if(msg) msg.textContent='';
+}
+
 // ─── DASHBOARD CUSTOMISER ─────────────────────────────────────────────────────
 const WIDGET_META = {
   'metrics':       {emoji:'📊', label:'Summary cards'},
@@ -2089,22 +2371,33 @@ function closeDashCustomizer(){
 }
 
 function renderDashWidgetList(){
-  const el = document.getElementById('dash-widget-list');
-  if(!el) return;
-  el.innerHTML = dashConfig.widgets.map((wid,i) => {
-    const meta = WIDGET_META[wid]||{emoji:'📦',label:wid};
-    const visible = !dashConfig.hidden || !dashConfig.hidden.includes(wid);
-    return '<div class="dash-widget-row" draggable="true" data-wid="'+wid+'" '+
-      'ondragstart="dashDragStart(event)" ondragover="dashDragOver(event)" ondrop="dashDrop(event)" ondragleave="dashDragLeave(event)">'+
+  var el=document.getElementById('dash-widget-list');
+  if(!el)return;
+  var total=dashConfig.widgets.length;
+  var rows=dashConfig.widgets.map(function(wid,i){
+    var meta=WIDGET_META[wid]||{emoji:'📦',label:wid};
+    var visible=!dashConfig.hidden||!dashConfig.hidden.includes(wid);
+    var btnStyle='width:30px;height:30px;border:1.5px solid var(--border2);border-radius:7px;background:var(--surface2);cursor:pointer;font-size:14px;';
+    var upBtn='<button data-wid="'+wid+'" data-dir="-1" onclick="moveDashWidget(this.dataset.wid,+this.dataset.dir)" style="'+btnStyle+(i===0?'opacity:.3;':'')+'">'+'↑</button>';
+    var dnBtn='<button data-wid="'+wid+'" data-dir="1"  onclick="moveDashWidget(this.dataset.wid,+this.dataset.dir)" style="'+btnStyle+(i===total-1?'opacity:.3;':'')+'">'+'↓</button>';
+    var chk='<label class="dash-widget-toggle" style="margin-left:4px"><input type="checkbox" data-wid="'+wid+'" '+(visible?'checked':'')+' onchange="toggleDashWidget(this.dataset.wid,this.checked)"/><span class="dash-widget-track"></span></label>';
+    return '<div class="dash-widget-row" data-wid="'+wid+'">'+
       '<span class="dash-widget-emoji">'+meta.emoji+'</span>'+
       '<span class="dash-widget-label">'+meta.label+'</span>'+
-      '<label class="dash-widget-toggle">'+
-        '<input type="checkbox" data-wid="'+wid+'" '+(visible?'checked':'')+' onchange="toggleDashWidget(this.dataset.wid,this.checked)"/>'+
-        '<span class="dash-widget-track"></span>'+
-      '</label>'+
-      '<span class="dash-widget-handle">⠿</span>'+
+      '<div style="display:flex;gap:4px;align-items:center">'+upBtn+dnBtn+chk+'</div>'+
     '</div>';
-  }).join('');
+  });
+  el.innerHTML=rows.join('');
+}
+
+function moveDashWidget(wid, dir){
+  const idx = dashConfig.widgets.indexOf(wid);
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= dashConfig.widgets.length) return;
+  dashConfig.widgets.splice(idx, 1);
+  dashConfig.widgets.splice(newIdx, 0, wid);
+  save();
+  renderDashWidgetList();
 }
 
 function toggleDashWidget(wid, show){
@@ -2150,6 +2443,7 @@ function openEditInvestment(id){
   document.getElementById('ei-type').value   = inv.itype||'buy';
   document.getElementById('ei-notes').value  = inv.notes||'';
   document.getElementById('ei-date').value   = inv.date||today();
+  document.getElementById('ei-bucket').value  = inv.bucket||'Investment';
   document.getElementById('inv-edit-modal').classList.add('open');
 }
 
@@ -2168,9 +2462,10 @@ function saveEditInvestment(){
     ...investments[idx],
     name,
     amount,
-    itype: document.getElementById('ei-type').value,
-    notes: document.getElementById('ei-notes').value.trim(),
-    date:  document.getElementById('ei-date').value || today()
+    itype:  document.getElementById('ei-type').value,
+    notes:  document.getElementById('ei-notes').value.trim(),
+    date:   document.getElementById('ei-date').value || today(),
+    bucket: document.getElementById('ei-bucket').value||'Investment'
   };
   save();
   closeEditInvestment();
