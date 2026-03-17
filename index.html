@@ -930,7 +930,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
       </div>
     </div>
     <hr class="divider"/>
-    <div class="modal-field"><label>Description</label><input type="text" id="e-name"/></div>
+    <div class="modal-field"><label>Description</label><input type="text" id="e-name" oninput="autoDetectEditBucket()"/></div>
     <div class="modal-field"><label>Amount</label><input type="number" id="e-amount" step="0.01" min="0"/></div>
     <div class="modal-field"><label>Type</label><select id="e-type"><option value="expense">Expense</option><option value="income">Income</option></select></div>
     <div class="modal-field"><label>Category</label>
@@ -947,7 +947,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
           <option value="Investment">🟢 Investment</option>
           <option value="Savings">🔵 Savings</option>
         </select>
-        <button type="button" onclick="autoDetectEditBucket()" style="padding:8px 12px;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s" title="Auto-detect bucket from name">🔍 Auto</button>
+        <button type="button" onclick="autoDetectEditBucket(true)" style="padding:8px 12px;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s" title="Auto-detect bucket from name">🔍 Auto</button>
       </div>
     </div>
     <div class="modal-recur-row">
@@ -1859,13 +1859,20 @@ function deleteInvestment(id){
 // ─── BUCKET RULES MANAGER ────────────────────────────────────────────────────
 
 
-function autoDetectEditBucket(){
+function autoDetectEditBucket(showFeedback){
   const name = document.getElementById('e-name')?.value||'';
   const detected = autoBucket(name);
+  const sel = document.getElementById('e-bucket');
+  if(!sel) return;
   if(detected){
-    document.getElementById('e-bucket').value = detected;
-    showToast('Detected: '+bucketIcon(detected)+' '+detected);
-  } else {
+    sel.value = detected;
+    // Flash the select to signal auto-update
+    sel.style.borderColor = bucketColor(detected);
+    sel.style.boxShadow = '0 0 0 3px '+bucketColor(detected)+'33';
+    clearTimeout(sel._flashTimer);
+    sel._flashTimer = setTimeout(()=>{sel.style.borderColor='';sel.style.boxShadow='';},1000);
+    if(showFeedback) showToast('Detected: '+bucketIcon(detected)+' '+detected);
+  } else if(showFeedback){
     showToast('⚠️ No rule matched — set manually');
   }
 }
