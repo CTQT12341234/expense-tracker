@@ -743,15 +743,17 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
             <option value="amt-desc">Amount: high→low</option>
           </select>
         </div>
-        <div class="filter-row-2">
+        <div class="filter-row-2" style="margin-bottom:8px">
           <span class="filter-label">Date</span>
           <input type="date" id="filter-from" onchange="renderTransactions()" style="max-width:145px"/>
           <span class="filter-label">→</span>
           <input type="date" id="filter-to"   onchange="renderTransactions()" style="max-width:145px"/>
-          <span class="filter-label">$</span>
-          <input type="number" id="filter-amt-min" placeholder="Min" min="0" onchange="renderTransactions()" style="max-width:90px"/>
+        </div>
+        <div class="filter-row-2">
+          <span class="filter-label">Amount</span>
+          <input type="number" id="filter-amt-min" placeholder="Min" min="0" onchange="renderTransactions()" style="max-width:100px"/>
           <span class="filter-label">–</span>
-          <input type="number" id="filter-amt-max" placeholder="Max" min="0" onchange="renderTransactions()" style="max-width:90px"/>
+          <input type="number" id="filter-amt-max" placeholder="Max" min="0" onchange="renderTransactions()" style="max-width:100px"/>
           <button class="clear-filter-btn" onclick="clearFilters()">Clear all</button>
         </div>
       </div>
