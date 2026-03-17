@@ -644,6 +644,14 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
         <select id="filter-type" onchange="renderTransactions()" style="max-width:120px">
           <option value="">All types</option><option value="expense">Expense</option><option value="income">Income</option>
         </select>
+        <select id="filter-bucket" onchange="window._activeBucketFilter='';renderTransactions()" style="max-width:140px">
+          <option value="">All buckets</option>
+          <option value="Needs">🔴 Needs</option>
+          <option value="Wants">🟣 Wants</option>
+          <option value="Investment">🟢 Investment</option>
+          <option value="Savings">🔵 Savings</option>
+          <option value="">No bucket</option>
+        </select>
       </div>
       <!-- Row 2: Date range + Amount range + Sort -->
       <div class="filter-row-2">
@@ -931,13 +939,16 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
     <div class="modal-field"><label>Date</label><input type="date" id="e-date"/></div>
     <div class="modal-field">
       <label>Bucket</label>
-      <select id="e-bucket" style="width:100%">
-        <option value="">No bucket</option>
-        <option value="Needs">🔴 Needs</option>
-        <option value="Wants">🟣 Wants</option>
-        <option value="Investment">🟢 Investment</option>
-        <option value="Savings">🔵 Savings</option>
-      </select>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="e-bucket" style="flex:1">
+          <option value="">No bucket</option>
+          <option value="Needs">🔴 Needs</option>
+          <option value="Wants">🟣 Wants</option>
+          <option value="Investment">🟢 Investment</option>
+          <option value="Savings">🔵 Savings</option>
+        </select>
+        <button type="button" onclick="autoDetectEditBucket()" style="padding:8px 12px;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s" title="Auto-detect bucket from name">🔍 Auto</button>
+      </div>
     </div>
     <div class="modal-recur-row">
       <label><input type="checkbox" id="e-recur" onchange="document.getElementById('e-recur-freq').style.display=this.checked?'':'none'"/> Save as recurring</label>
@@ -1178,8 +1189,8 @@ function getExportRange(){
 function filteredForExport(){
   const {from,to}=getExportRange();
   let list=[...txs];
-  const activeBucket=window._activeBucketFilter||'';
-  if(activeBucket){list=list.filter(t=>t.bucket===activeBucket);}
+  const activeBucket=window._activeBucketFilter||document.getElementById('filter-bucket')?.value||'';
+  if(activeBucket){list=list.filter(t=>(t.bucket||autoBucket(t.name))===activeBucket);}
   if(from)list=list.filter(t=>t.date>=from);
   if(to)  list=list.filter(t=>t.date<=to);
   return list.sort((a,b)=>a.date.localeCompare(b.date));
@@ -1375,8 +1386,9 @@ function filterByBucket(bucketName){
   document.getElementById('view-transactions').classList.add('active');
   const tnav=document.querySelector('.nav-btn[onclick*="transactions"]');if(tnav)tnav.classList.add('active');
   const bnav=document.getElementById('bn-transactions');if(bnav)bnav.classList.add('active');
-  // Set a custom bucket filter
+  // Set bucket filter via dropdown + global variable
   window._activeBucketFilter=bucketName;
+  const fb=document.getElementById('filter-bucket');if(fb)fb.value=bucketName;
   // Clear other filters
   ['search','filter-cat','filter-type','filter-from','filter-to','filter-amt-min','filter-amt-max'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const fs=document.getElementById('filter-sort');if(fs)fs.value='date-desc';
@@ -1393,8 +1405,8 @@ function renderTransactions(){
   const famax=parseFloat(document.getElementById('filter-amt-max')?.value)||Infinity;
   const sort=document.getElementById('filter-sort')?.value||'date-desc';
   let list=[...txs];
-  const activeBucket=window._activeBucketFilter||'';
-  if(activeBucket){list=list.filter(t=>t.bucket===activeBucket);}
+  const activeBucket=window._activeBucketFilter||document.getElementById('filter-bucket')?.value||'';
+  if(activeBucket){list=list.filter(t=>(t.bucket||autoBucket(t.name))===activeBucket);}
   if(q)     list=list.filter(t=>t.name.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q));
   if(fc)    list=list.filter(t=>t.cat===fc);
   if(ft)    list=list.filter(t=>t.type===ft);
@@ -1408,11 +1420,11 @@ function renderTransactions(){
   const ce=document.getElementById('tx-count');
   if(ce)ce.textContent=list.length===txs.length?list.length+' transactions':'Showing '+list.length+' of '+txs.length;
   const bi=document.getElementById('bucket-filter-indicator');
-  if(bi){if(activeBucket){bi.style.display='block';bi.textContent=bucketIcon(activeBucket)+' '+activeBucket+' ✕';bi.style.background=bucketColor(activeBucket)+'22';bi.style.color=bucketColor(activeBucket);}else{bi.style.display='none';}}
+  if(bi){if(activeBucket&&activeBucket!==''){bi.style.display='inline-flex';bi.textContent=bucketIcon(activeBucket)+' '+activeBucket+' ✕';bi.style.background=bucketColor(activeBucket)+'22';bi.style.color=bucketColor(activeBucket);}else{bi.style.display='none';}}
   document.getElementById('tx-list').innerHTML=list.length?list.map(txHTML).join(''):`<div class="empty"><div class="empty-icon">🔍</div>No transactions match your filters.</div>`;
 }
-function clearBucketFilter(){window._activeBucketFilter='';const bi=document.getElementById('bucket-filter-indicator');if(bi)bi.style.display='none';renderTransactions();}
-function clearFilters(){ window._activeBucketFilter='';
+function clearBucketFilter(){window._activeBucketFilter='';const bi=document.getElementById('bucket-filter-indicator');if(bi)bi.style.display='none';const fb=document.getElementById('filter-bucket');if(fb)fb.value='';renderTransactions();}
+function clearFilters(){ window._activeBucketFilter='';const fb=document.getElementById('filter-bucket');if(fb)fb.value='';
   ['search','filter-cat','filter-type','filter-from','filter-to','filter-amt-min','filter-amt-max'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const fs=document.getElementById('filter-sort');if(fs)fs.value='date-desc';
   renderTransactions();
@@ -1446,7 +1458,7 @@ async function parseVoice(text){try{const res=await fetch('https://api.anthropic
 function addFromVoice(){const name=document.getElementById('vp-name').value.trim();const amount=parseFloat(document.getElementById('vp-amount').value);if(!name||isNaN(amount))return;const cat=document.getElementById('vp-cat').value;txs.unshift({id:Date.now(),name,amount,type:document.getElementById('vp-type').value,cat,date:document.getElementById('vp-date').value||today(),icon:catIconDef(cat),bucket:document.getElementById('vp-bucket')?.value||autoBucket(name)});save();document.getElementById('voice-preview').style.display='none';showToast('✅ Added!');renderDashboard();}
 
 // ─── EDIT MODAL ───────────────────────────────────────────────────────────────
-function openEdit(id){const t=txs.find(x=>x.id===id);if(!t)return;editingId=id;document.getElementById('e-name').value=t.name;document.getElementById('e-amount').value=t.amount;document.getElementById('e-type').value=t.type;document.getElementById('e-cat').value=t.cat;document.getElementById('e-date').value=t.date;document.getElementById('e-icon-preview').textContent=txIcon(t);document.getElementById('e-icon-picker').style.display='none';document.getElementById('e-bucket').value=t.bucket||'';const er=recurTxs.find(r=>r.name===t.name&&r.cat===t.cat);document.getElementById('e-recur').checked=!!er;document.getElementById('e-recur-freq').style.display=er?'':'none';if(er)document.getElementById('e-recur-freq').value=er.freq||'monthly';document.getElementById('edit-modal').classList.add('open');}
+function openEdit(id){const t=txs.find(x=>x.id===id);if(!t)return;editingId=id;document.getElementById('e-name').value=t.name;document.getElementById('e-amount').value=t.amount;document.getElementById('e-type').value=t.type;document.getElementById('e-cat').value=t.cat;document.getElementById('e-date').value=t.date;document.getElementById('e-icon-preview').textContent=txIcon(t);document.getElementById('e-icon-picker').style.display='none';document.getElementById('e-bucket').value=t.bucket||autoBucket(t.name)||'';const er=recurTxs.find(r=>r.name===t.name&&r.cat===t.cat);document.getElementById('e-recur').checked=!!er;document.getElementById('e-recur-freq').style.display=er?'':'none';if(er)document.getElementById('e-recur-freq').value=er.freq||'monthly';document.getElementById('edit-modal').classList.add('open');}
 function closeEdit(){document.getElementById('edit-modal').classList.remove('open');editingId=null;}
 function saveEdit(){const name=document.getElementById('e-name').value.trim();const amount=parseFloat(document.getElementById('e-amount').value);if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Invalid');return;}const idx=txs.findIndex(x=>x.id===editingId);if(idx===-1)return;const oldTx=txs[idx];const icon=document.getElementById('e-icon-preview').textContent||catIconDef(document.getElementById('e-cat').value);txs[idx]={...oldTx,name,amount,type:document.getElementById('e-type').value,cat:document.getElementById('e-cat').value,date:document.getElementById('e-date').value||today(),icon,bucket:document.getElementById('e-bucket').value||''};const makeR=document.getElementById('e-recur').checked;const freq=document.getElementById('e-recur-freq').value;recurTxs=recurTxs.filter(r=>!(r.name===oldTx.name&&r.cat===oldTx.cat));if(makeR)recurTxs.push({id:Date.now()+1,name,amount,type:txs[idx].type,cat:txs[idx].cat,freq});save();closeEdit();showToast('✅ Updated!');renderDashboard();renderTransactions();}
 function deleteFromEdit(){if(!confirm('Delete?'))return;txs=txs.filter(x=>x.id!==editingId);save();closeEdit();showToast('Deleted');renderDashboard();renderTransactions();}
@@ -1846,6 +1858,17 @@ function deleteInvestment(id){
 
 // ─── BUCKET RULES MANAGER ────────────────────────────────────────────────────
 
+
+function autoDetectEditBucket(){
+  const name = document.getElementById('e-name')?.value||'';
+  const detected = autoBucket(name);
+  if(detected){
+    document.getElementById('e-bucket').value = detected;
+    showToast('Detected: '+bucketIcon(detected)+' '+detected);
+  } else {
+    showToast('⚠️ No rule matched — set manually');
+  }
+}
 function applyRulesToExisting(overwriteAll){
   let updated=0;
   txs.forEach(t=>{
