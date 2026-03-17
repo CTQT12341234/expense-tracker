@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Expense Tracker</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -117,7 +117,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .form-row input,.form-row select{flex:1;min-width:100px;}
 .form-row input[type="number"]{max-width:130px;}
 .form-row input[type="date"]{max-width:160px;}
-input,select{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;padding:9px 11px;outline:none;transition:border-color .15s,background .25s,color .25s;font-family:inherit;}
+input,select{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:16px;padding:9px 11px;outline:none;transition:border-color .15s,background .25s,color .25s;font-family:inherit;}
+@media(min-width:641px){input,select{font-size:14px;}}
 input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,91,219,.12);}
 .recur-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
 .recur-row label{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer;}
@@ -314,6 +315,10 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 .alloc-sum-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
 .alloc-sum-used{font-size:11px;color:var(--text2);}
 .alloc-sum-remaining{font-size:11px;font-weight:600;}
+
+.alloc-quick-dep-btn{display:block;width:100%;margin-top:8px;padding:7px 10px;border-radius:var(--radius);border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:rgba(0,0,0,.08);color:inherit;}
+[data-theme="dark"] .alloc-quick-dep-btn{background:rgba(255,255,255,.1);}
+.alloc-quick-dep-btn:hover{opacity:.85;transform:scale(.98);}
 .alloc-sum-no-income{font-size:12px;color:var(--text3);font-style:italic;text-align:center;padding:.5rem 0;}
 .alloc-income-input-row{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}
 .alloc-income-input-row input{flex:1;min-width:130px;font-size:14px;font-weight:600;}
@@ -509,7 +514,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
           <div id="m-icon-grid" class="icon-grid"></div>
         </div>
         <div class="form-row">
-          <input type="text" id="m-name" placeholder="Description e.g. Coffee" style="flex:2;min-width:150px"/>
+          <input type="text" id="m-name" placeholder="Description e.g. Coffee" style="flex:2;min-width:150px" oninput="applyAutoBucket('m-name','m-bucket')"/>
           <input type="number" id="m-amount" placeholder="Amount" step="0.01" min="0" style="max-width:120px"/>
           <select id="m-type" style="max-width:110px"><option value="expense">Expense</option><option value="income">Income</option></select>
         </div>
@@ -518,6 +523,15 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
             <option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option><option>Entertainment</option><option>Health</option><option>Housing</option><option>Utilities</option><option>Salary</option><option>Other</option>
           </select>
           <input type="date" id="m-date" style="max-width:160px"/>
+        </div>
+        <div class="form-row">
+          <select id="m-bucket" style="max-width:150px">
+            <option value="">No bucket</option>
+            <option value="Needs">🔴 Needs</option>
+            <option value="Wants">🟣 Wants</option>
+            <option value="Investment">🟢 Investment</option>
+            <option value="Savings">🔵 Savings</option>
+          </select>
         </div>
         <div class="recur-row">
           <label><input type="checkbox" id="m-recur" onchange="document.getElementById('m-recur-freq').style.display=this.checked?'':'none'"/> Make this recurring</label>
@@ -542,6 +556,15 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
             <select id="ai-cat"><option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option><option>Entertainment</option><option>Health</option><option>Housing</option><option>Utilities</option><option>Salary</option><option>Other</option></select>
             <input type="date" id="ai-date" style="max-width:160px"/>
           </div>
+          <div class="form-row">
+            <select id="ai-bucket" style="max-width:170px">
+              <option value="">No bucket</option>
+              <option value="Needs">🔴 Needs</option>
+              <option value="Wants">🟣 Wants</option>
+              <option value="Investment">🟢 Investment</option>
+              <option value="Savings">🔵 Savings</option>
+            </select>
+          </div>
           <button class="submit-btn" onclick="addFromAI()">✓ Confirm &amp; Add</button>
         </div>
       </div>
@@ -561,6 +584,15 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
           <div class="form-row">
             <select id="vp-cat"><option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option><option>Entertainment</option><option>Health</option><option>Housing</option><option>Utilities</option><option>Salary</option><option>Other</option></select>
             <input type="date" id="vp-date" style="max-width:160px"/>
+          </div>
+          <div class="form-row">
+            <select id="vp-bucket" style="max-width:170px">
+              <option value="">No bucket</option>
+              <option value="Needs">🔴 Needs</option>
+              <option value="Wants">🟣 Wants</option>
+              <option value="Investment">🟢 Investment</option>
+              <option value="Savings">🔵 Savings</option>
+            </select>
           </div>
           <button class="submit-btn" onclick="addFromVoice()">✓ Confirm &amp; Add</button>
         </div>
@@ -632,7 +664,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
         <button class="clear-filter-btn" onclick="clearFilters()">Clear</button>
       </div>
     </div>
-    <div class="tx-count" id="tx-count"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div class="tx-count" id="tx-count" style="margin-bottom:0;flex:1"></div><div id="bucket-filter-indicator" style="display:none;font-size:12px;font-weight:600;padding:3px 12px;border-radius:999px;cursor:pointer" onclick="clearBucketFilter()"></div></div>
     <div id="tx-list" class="tx-list"></div>
   </div>
 
@@ -688,17 +720,6 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
         <button onclick="autoBalance()" style="font-size:12px;padding:7px 14px;border:1.5px solid var(--border2);border-radius:var(--radius);background:none;color:var(--text2);cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">⚖️ Auto-balance to 100%</button>
       </div>
 
-      <!-- Calculator -->
-      <div class="alloc-calc">
-        <div class="alloc-calc-title">🧮 Income calculator</div>
-        <div class="alloc-calc-row">
-          <input class="alloc-calc-input" type="number" id="alloc-income-input" placeholder="Enter income amount…" min="0" step="0.01" oninput="calcAllocation()"/>
-          <div style="font-size:12px;color:var(--blue);font-weight:600">or</div>
-          <button class="alloc-calc-btn" onclick="useMonthIncome()">Use this month's income</button>
-        </div>
-        <div class="alloc-results" id="alloc-results"></div>
-        <div class="alloc-month-banner" id="alloc-month-banner" style="display:none"></div>
-      </div>
     </div>
 
     <!-- Overview stats -->
@@ -851,6 +872,33 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
     <button class="danger-btn" onclick="clearAllData()">Clear</button>
   </div>
 
+  <div class="settings-section-title">🏷️ Bucket auto-rules</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Keywords are matched to buckets automatically when you type a transaction name.</div>
+  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+    <input type="text" id="rule-keyword" placeholder="Keyword e.g. Netflix" style="flex:1;min-width:100px;font-size:13px;padding:7px 10px"/>
+    <select id="rule-bucket" style="max-width:130px;font-size:13px;padding:7px 10px">
+      <option value="Needs">🔴 Needs</option>
+      <option value="Wants">🟣 Wants</option>
+      <option value="Investment">🟢 Investment</option>
+      <option value="Savings">🔵 Savings</option>
+    </select>
+    <button onclick="addBucketRule()" style="padding:7px 14px;border:none;border-radius:var(--radius);background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Add rule</button>
+  </div>
+  <div id="rules-list" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+
+  <div class="settings-section-title">🔄 Apply rules to existing</div>
+  <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+    <div class="setting-info">
+      <h4>Update existing transactions</h4>
+      <p>Apply your bucket rules to all transactions that have no bucket assigned yet.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="applyRulesToExisting(false)" style="padding:8px 16px;border:1.5px solid var(--blue);border-radius:var(--radius);background:var(--blue-bg);color:var(--blue);font-size:13px;font-weight:600;cursor:pointer">Apply to untagged only</button>
+      <button onclick="applyRulesToExisting(true)" style="padding:8px 16px;border:1.5px solid var(--amber);border-radius:var(--radius);background:var(--amber-bg);color:var(--amber);font-size:13px;font-weight:600;cursor:pointer">Re-apply to ALL</button>
+    </div>
+    <div id="apply-rules-result" style="font-size:12px;color:var(--text2);min-height:16px"></div>
+  </div>
+
   <div class="settings-section-title">About</div>
   <div class="setting-row">
     <div class="setting-info"><h4>Expense Tracker</h4><p>Built with Claude AI · Data stored locally in your browser</p></div>
@@ -881,6 +929,16 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
       <select id="e-cat"><option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option><option>Entertainment</option><option>Health</option><option>Housing</option><option>Utilities</option><option>Salary</option><option>Other</option></select>
     </div>
     <div class="modal-field"><label>Date</label><input type="date" id="e-date"/></div>
+    <div class="modal-field">
+      <label>Bucket</label>
+      <select id="e-bucket" style="width:100%">
+        <option value="">No bucket</option>
+        <option value="Needs">🔴 Needs</option>
+        <option value="Wants">🟣 Wants</option>
+        <option value="Investment">🟢 Investment</option>
+        <option value="Savings">🔵 Savings</option>
+      </select>
+    </div>
     <div class="modal-recur-row">
       <label><input type="checkbox" id="e-recur" onchange="document.getElementById('e-recur-freq').style.display=this.checked?'':'none'"/> Save as recurring</label>
       <select id="e-recur-freq" style="display:none"><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select>
@@ -897,7 +955,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 <nav class="bottom-nav" id="bottom-nav">
   <div class="bottom-nav-inner">
     <button class="bnav-btn active" id="bn-dashboard" onclick="switchView('dashboard',this,true)"><span class="bnav-icon">📊</span><span class="bnav-label">Home</span></button>
-    <button class="bnav-btn" id="bn-transactions" onclick="switchView('transactions',this,true)"><span class="bnav-icon">📋</span><span class="bnav-label">Txns</span></button>
+    <button class="bnav-btn" id="bn-transactions" onclick="switchView('transactions',this,true)"><span class="bnav-icon">📋</span><span class="bnav-label">Trans</span></button>
     <button class="bnav-btn" id="bn-savings" onclick="switchView('savings',this,true)"><span class="bnav-icon">🏦</span><span class="bnav-label">Savings</span></button>
     <button class="bnav-btn" id="bn-recurring" onclick="switchView('recurring',this,true)"><span class="bnav-icon">🔁</span><span class="bnav-label">Recur</span></button>
     <button class="bnav-btn" id="bn-budget" onclick="switchView('budget',this,true)"><span class="bnav-icon">🎯</span><span class="bnav-label">Budget</span></button>
@@ -930,6 +988,7 @@ let savingsTxs= JSON.parse(localStorage.getItem('xp_sav')   ||'[]');
 let savGoals  = JSON.parse(localStorage.getItem('xp_goals') ||'[]');
 let savAllocs = JSON.parse(localStorage.getItem('xp_allocs')||'null');
 let investments = JSON.parse(localStorage.getItem('xp_investments')||'[]');
+let bucketRules = JSON.parse(localStorage.getItem('xp_bucket_rules')||'null');
 let allocDonut = null;
 let currency  = localStorage.getItem('xp_currency')||'AUD';
 let theme     = localStorage.getItem('xp_theme')   ||'light';
@@ -967,6 +1026,36 @@ if(!txs){
 }
 
 
+if(!bucketRules){
+  bucketRules=[
+    {id:'r1',keyword:'rent',bucket:'Needs'},
+    {id:'r2',keyword:'electricity',bucket:'Needs'},
+    {id:'r3',keyword:'electricity bill',bucket:'Needs'},
+    {id:'r4',keyword:'groceries',bucket:'Needs'},
+    {id:'r5',keyword:'grocery',bucket:'Needs'},
+    {id:'r6',keyword:'water',bucket:'Needs'},
+    {id:'r7',keyword:'gas',bucket:'Needs'},
+    {id:'r8',keyword:'insurance',bucket:'Needs'},
+    {id:'r9',keyword:'mortgage',bucket:'Needs'},
+    {id:'r10',keyword:'netflix',bucket:'Wants'},
+    {id:'r11',keyword:'spotify',bucket:'Wants'},
+    {id:'r12',keyword:'holiday',bucket:'Wants'},
+    {id:'r13',keyword:'vacation',bucket:'Wants'},
+    {id:'r14',keyword:'uber eats',bucket:'Wants'},
+    {id:'r15',keyword:'dining',bucket:'Wants'},
+    {id:'r16',keyword:'restaurant',bucket:'Wants'},
+    {id:'r17',keyword:'coffee',bucket:'Wants'},
+    {id:'r18',keyword:'shopping',bucket:'Wants'},
+    {id:'r19',keyword:'investment',bucket:'Investment'},
+    {id:'r20',keyword:'etf',bucket:'Investment'},
+    {id:'r21',keyword:'shares',bucket:'Investment'},
+    {id:'r22',keyword:'crypto',bucket:'Investment'},
+    {id:'r23',keyword:'savings',bucket:'Savings'},
+    {id:'r24',keyword:'emergency fund',bucket:'Savings'},
+  ];
+  localStorage.setItem('xp_bucket_rules',JSON.stringify(bucketRules));
+}
+
 if(!savAllocs){
   savAllocs=[
     {id:'a1',name:'Needs',pct:45,color:'#f03e3e'},
@@ -976,6 +1065,7 @@ if(!savAllocs){
   ];
   localStorage.setItem('xp_allocs',JSON.stringify(savAllocs));
   localStorage.setItem('xp_investments',JSON.stringify(investments));
+  localStorage.setItem('xp_bucket_rules',JSON.stringify(bucketRules));
 }
 
 function save(){
@@ -986,6 +1076,7 @@ function save(){
   localStorage.setItem('xp_goals',JSON.stringify(savGoals));
   localStorage.setItem('xp_allocs',JSON.stringify(savAllocs));
   localStorage.setItem('xp_investments',JSON.stringify(investments));
+  localStorage.setItem('xp_bucket_rules',JSON.stringify(bucketRules));
   localStorage.setItem('xp_currency',currency);
   localStorage.setItem('xp_theme',theme);
   localStorage.setItem('xp_period',trendPeriod);
@@ -1054,6 +1145,7 @@ function setCurrency(v){
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 function openSettings(){
+  renderBucketRules();
   document.getElementById('settings-overlay').classList.add('open');
   document.getElementById('settings-panel').classList.add('open');
   const tog=document.getElementById('dark-mode-toggle');if(tog)tog.checked=theme==='dark';
@@ -1086,6 +1178,8 @@ function getExportRange(){
 function filteredForExport(){
   const {from,to}=getExportRange();
   let list=[...txs];
+  const activeBucket=window._activeBucketFilter||'';
+  if(activeBucket){list=list.filter(t=>t.bucket===activeBucket);}
   if(from)list=list.filter(t=>t.date>=from);
   if(to)  list=list.filter(t=>t.date<=to);
   return list.sort((a,b)=>a.date.localeCompare(b.date));
@@ -1228,6 +1322,30 @@ function renderTrendChart(){
 }
 
 // ─── TX HTML ──────────────────────────────────────────────────────────────────
+
+
+// ─── AUTO-BUCKET ─────────────────────────────────────────────────────────────
+function autoBucket(name){
+  if(!name) return '';
+  const lower = name.toLowerCase();
+  // Sort rules by keyword length descending so longer/more-specific matches win
+  const sorted = [...bucketRules].sort((a,b)=>b.keyword.length-a.keyword.length);
+  for(const r of sorted){
+    if(lower.includes(r.keyword.toLowerCase())) return r.bucket;
+  }
+  return '';
+}
+
+function applyAutoBucket(nameInputId, bucketSelectId){
+  const name = document.getElementById(nameInputId)?.value||'';
+  const sel  = document.getElementById(bucketSelectId);
+  if(!sel) return;
+  // Only auto-fill if bucket not already manually set
+  const detected = autoBucket(name);
+  if(detected) sel.value = detected;
+}
+function bucketColor(b){const m={'Needs':'#f03e3e','Wants':'#7950f2','Investment':'#12b886','Savings':'#1098ad'};return m[b]||'#868e96';}
+function bucketIcon(b){const m={'Needs':'🔴','Wants':'🟣','Investment':'🟢','Savings':'🔵'};return m[b]||'📦';}
 function txHTML(t){
   const col=catColor(t.cat);const isR=recurTxs.some(r=>r.name===t.name&&r.cat===t.cat);
   return `<div class="tx-item${isR?' recurring-tx':''}" onclick="openEdit(${t.id})">
@@ -1238,6 +1356,7 @@ function txHTML(t){
         <span class="cat-pill" style="background:${col}18;color:${col}">${t.cat}</span>
         <span>${t.date}</span>
         ${isR?'<span class="recur-badge">🔁 Recurring</span>':''}
+        ${t.bucket?'<span class="bucket-badge" style="background:'+bucketColor(t.bucket)+'22;color:'+bucketColor(t.bucket)+';border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700">'+bucketIcon(t.bucket)+' '+t.bucket+'</span>':''}
       </div>
     </div>
     <div class="tx-right">
@@ -1248,6 +1367,22 @@ function txHTML(t){
 }
 
 // ─── TRANSACTIONS FILTER ─────────────────────────────────────────────────────
+
+function filterByBucket(bucketName){
+  // Navigate to transactions tab filtered by bucket
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn,.bnav-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-transactions').classList.add('active');
+  const tnav=document.querySelector('.nav-btn[onclick*="transactions"]');if(tnav)tnav.classList.add('active');
+  const bnav=document.getElementById('bn-transactions');if(bnav)bnav.classList.add('active');
+  // Set a custom bucket filter
+  window._activeBucketFilter=bucketName;
+  // Clear other filters
+  ['search','filter-cat','filter-type','filter-from','filter-to','filter-amt-min','filter-amt-max'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const fs=document.getElementById('filter-sort');if(fs)fs.value='date-desc';
+  renderTransactions();
+  showToast('Showing '+bucketName+' transactions');
+}
 function renderTransactions(){
   const q=(document.getElementById('search')?.value||'').toLowerCase();
   const fc=document.getElementById('filter-cat')?.value||'';
@@ -1258,6 +1393,8 @@ function renderTransactions(){
   const famax=parseFloat(document.getElementById('filter-amt-max')?.value)||Infinity;
   const sort=document.getElementById('filter-sort')?.value||'date-desc';
   let list=[...txs];
+  const activeBucket=window._activeBucketFilter||'';
+  if(activeBucket){list=list.filter(t=>t.bucket===activeBucket);}
   if(q)     list=list.filter(t=>t.name.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q));
   if(fc)    list=list.filter(t=>t.cat===fc);
   if(ft)    list=list.filter(t=>t.type===ft);
@@ -1269,10 +1406,13 @@ function renderTransactions(){
   else if(sort==='amt-asc')  list.sort((a,b)=>a.amount-b.amount);
   else if(sort==='amt-desc') list.sort((a,b)=>b.amount-a.amount);
   const ce=document.getElementById('tx-count');
-  if(ce)ce.textContent=list.length===txs.length?`${txs.length} transactions`:`Showing ${list.length} of ${txs.length}`;
+  if(ce)ce.textContent=list.length===txs.length?list.length+' transactions':'Showing '+list.length+' of '+txs.length;
+  const bi=document.getElementById('bucket-filter-indicator');
+  if(bi){if(activeBucket){bi.style.display='block';bi.textContent=bucketIcon(activeBucket)+' '+activeBucket+' ✕';bi.style.background=bucketColor(activeBucket)+'22';bi.style.color=bucketColor(activeBucket);}else{bi.style.display='none';}}
   document.getElementById('tx-list').innerHTML=list.length?list.map(txHTML).join(''):`<div class="empty"><div class="empty-icon">🔍</div>No transactions match your filters.</div>`;
 }
-function clearFilters(){
+function clearBucketFilter(){window._activeBucketFilter='';const bi=document.getElementById('bucket-filter-indicator');if(bi)bi.style.display='none';renderTransactions();}
+function clearFilters(){ window._activeBucketFilter='';
   ['search','filter-cat','filter-type','filter-from','filter-to','filter-amt-min','filter-amt-max'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const fs=document.getElementById('filter-sort');if(fs)fs.value='date-desc';
   renderTransactions();
@@ -1285,9 +1425,9 @@ function addManual(){
   if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Enter a description and valid amount');return;}
   const icon=document.getElementById('m-icon-preview').textContent||catIconDef(document.getElementById('m-cat').value);
   const isR=document.getElementById('m-recur').checked;const freq=document.getElementById('m-recur-freq').value;
-  const tx={id:Date.now(),name,amount,type:document.getElementById('m-type').value,cat:document.getElementById('m-cat').value,date:document.getElementById('m-date').value||today(),icon};
+  const bucket=document.getElementById('m-bucket').value||''; const tx={id:Date.now(),name,amount,type:document.getElementById('m-type').value,cat:document.getElementById('m-cat').value,date:document.getElementById('m-date').value||today(),icon,bucket};
   txs.unshift(tx);if(isR)recurTxs.push({id:Date.now()+1,name,amount,type:tx.type,cat:tx.cat,freq});save();
-  document.getElementById('m-name').value='';document.getElementById('m-amount').value='';document.getElementById('m-recur').checked=false;document.getElementById('m-recur-freq').style.display='none';document.getElementById('m-icon-picker').style.display='none';
+  document.getElementById('m-name').value='';document.getElementById('m-amount').value='';document.getElementById('m-bucket').value='';document.getElementById('m-recur').checked=false;document.getElementById('m-recur-freq').style.display='none';document.getElementById('m-icon-picker').style.display='none';
   setDefaultIcon('m-icon-preview',document.getElementById('m-cat').value);showToast('✅ Transaction added!');renderDashboard();
 }
 
@@ -1297,18 +1437,18 @@ async function parseAI(){
   const btn=document.getElementById('ai-parse-btn'),status=document.getElementById('ai-status');btn.textContent='Parsing…';btn.disabled=true;status.textContent='🤖 Analysing…';
   try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:`Parse a transaction. Respond ONLY with JSON: {"name":"desc","amount":12.50,"type":"expense","cat":"Food & Dining","date":"2026-03-16"}\nCategories: Food & Dining, Transport, Shopping, Entertainment, Health, Housing, Utilities, Salary, Other. Today is ${today()}.`,messages:[{role:'user',content:text}]})});
   const data=await res.json();const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();const p=JSON.parse(raw);
-  document.getElementById('ai-name').value=p.name||text;document.getElementById('ai-amount').value=p.amount||'';document.getElementById('ai-type').value=p.type==='income'?'income':'expense';document.getElementById('ai-cat').value=CATS.includes(p.cat)?p.cat:'Other';document.getElementById('ai-date').value=p.date||today();document.getElementById('ai-preview').style.display='';status.textContent='✅ Parsed! Review and confirm.';}catch(e){status.textContent='⚠️ Could not parse — fill manually.';}btn.textContent='Parse with AI';btn.disabled=false;
+  document.getElementById('ai-name').value=p.name||text;document.getElementById('ai-amount').value=p.amount||'';document.getElementById('ai-bucket')&&(document.getElementById('ai-bucket').value=autoBucket(p.name||text)||'');document.getElementById('ai-type').value=p.type==='income'?'income':'expense';document.getElementById('ai-cat').value=CATS.includes(p.cat)?p.cat:'Other';document.getElementById('ai-date').value=p.date||today();document.getElementById('ai-preview').style.display='';status.textContent='✅ Parsed! Review and confirm.';}catch(e){status.textContent='⚠️ Could not parse — fill manually.';}btn.textContent='Parse with AI';btn.disabled=false;
 }
-function addFromAI(){const name=document.getElementById('ai-name').value.trim();const amount=parseFloat(document.getElementById('ai-amount').value);if(!name||isNaN(amount))return;const cat=document.getElementById('ai-cat').value;txs.unshift({id:Date.now(),name,amount,type:document.getElementById('ai-type').value,cat,date:document.getElementById('ai-date').value||today(),icon:catIconDef(cat)});save();document.getElementById('ai-input').value='';document.getElementById('ai-preview').style.display='none';document.getElementById('ai-status').textContent='';showToast('✅ Added!');renderDashboard();}
+function addFromAI(){const name=document.getElementById('ai-name').value.trim();const amount=parseFloat(document.getElementById('ai-amount').value);if(!name||isNaN(amount))return;const cat=document.getElementById('ai-cat').value;txs.unshift({id:Date.now(),name,amount,type:document.getElementById('ai-type').value,cat,date:document.getElementById('ai-date').value||today(),icon:catIconDef(cat),bucket:document.getElementById('ai-bucket')?.value||autoBucket(name)});save();document.getElementById('ai-input').value='';document.getElementById('ai-preview').style.display='none';document.getElementById('ai-status').textContent='';showToast('✅ Added!');renderDashboard();}
 let recognition=null,isRecording=false;
 function toggleVoice(){if(isRecording){recognition&&recognition.stop();return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){document.getElementById('voice-status').textContent='⚠️ Voice not supported — try Chrome.';return;}recognition=new SR();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-AU';recognition.onstart=()=>{isRecording=true;document.getElementById('voice-btn').textContent='⏹ Stop';document.getElementById('voice-btn').classList.add('recording');document.getElementById('voice-status').textContent='🔴 Listening…';};recognition.onresult=e=>{document.getElementById('voice-text').value=Array.from(e.results).map(r=>r[0].transcript).join('');};recognition.onend=()=>{isRecording=false;document.getElementById('voice-btn').textContent='🎤 Start';document.getElementById('voice-btn').classList.remove('recording');const txt=document.getElementById('voice-text').value;if(txt){document.getElementById('voice-status').textContent='⏳ Parsing…';parseVoice(txt);}};recognition.start();}
-async function parseVoice(text){try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:`Parse a transaction. Respond ONLY with JSON: {"name":"desc","amount":12.50,"type":"expense","cat":"Food & Dining","date":"2026-03-16"}\nCategories: Food & Dining, Transport, Shopping, Entertainment, Health, Housing, Utilities, Salary, Other. Today is ${today()}.`,messages:[{role:'user',content:text}]})});const data=await res.json();const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();const p=JSON.parse(raw);document.getElementById('vp-name').value=p.name||text;document.getElementById('vp-amount').value=p.amount||'';document.getElementById('vp-type').value=p.type==='income'?'income':'expense';document.getElementById('vp-cat').value=CATS.includes(p.cat)?p.cat:'Other';document.getElementById('vp-date').value=p.date||today();document.getElementById('voice-preview').style.display='';document.getElementById('voice-status').textContent='✅ Parsed!';}catch(e){document.getElementById('voice-status').textContent='⚠️ Parsing failed.';}}
-function addFromVoice(){const name=document.getElementById('vp-name').value.trim();const amount=parseFloat(document.getElementById('vp-amount').value);if(!name||isNaN(amount))return;const cat=document.getElementById('vp-cat').value;txs.unshift({id:Date.now(),name,amount,type:document.getElementById('vp-type').value,cat,date:document.getElementById('vp-date').value||today(),icon:catIconDef(cat)});save();document.getElementById('voice-preview').style.display='none';showToast('✅ Added!');renderDashboard();}
+async function parseVoice(text){try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:300,system:`Parse a transaction. Respond ONLY with JSON: {"name":"desc","amount":12.50,"type":"expense","cat":"Food & Dining","date":"2026-03-16"}\nCategories: Food & Dining, Transport, Shopping, Entertainment, Health, Housing, Utilities, Salary, Other. Today is ${today()}.`,messages:[{role:'user',content:text}]})});const data=await res.json();const raw=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();const p=JSON.parse(raw);document.getElementById('vp-name').value=p.name||text;document.getElementById('vp-amount').value=p.amount||'';document.getElementById('vp-bucket')&&(document.getElementById('vp-bucket').value=autoBucket(p.name||text)||'');document.getElementById('vp-type').value=p.type==='income'?'income':'expense';document.getElementById('vp-cat').value=CATS.includes(p.cat)?p.cat:'Other';document.getElementById('vp-date').value=p.date||today();document.getElementById('voice-preview').style.display='';document.getElementById('voice-status').textContent='✅ Parsed!';}catch(e){document.getElementById('voice-status').textContent='⚠️ Parsing failed.';}}
+function addFromVoice(){const name=document.getElementById('vp-name').value.trim();const amount=parseFloat(document.getElementById('vp-amount').value);if(!name||isNaN(amount))return;const cat=document.getElementById('vp-cat').value;txs.unshift({id:Date.now(),name,amount,type:document.getElementById('vp-type').value,cat,date:document.getElementById('vp-date').value||today(),icon:catIconDef(cat),bucket:document.getElementById('vp-bucket')?.value||autoBucket(name)});save();document.getElementById('voice-preview').style.display='none';showToast('✅ Added!');renderDashboard();}
 
 // ─── EDIT MODAL ───────────────────────────────────────────────────────────────
-function openEdit(id){const t=txs.find(x=>x.id===id);if(!t)return;editingId=id;document.getElementById('e-name').value=t.name;document.getElementById('e-amount').value=t.amount;document.getElementById('e-type').value=t.type;document.getElementById('e-cat').value=t.cat;document.getElementById('e-date').value=t.date;document.getElementById('e-icon-preview').textContent=txIcon(t);document.getElementById('e-icon-picker').style.display='none';const er=recurTxs.find(r=>r.name===t.name&&r.cat===t.cat);document.getElementById('e-recur').checked=!!er;document.getElementById('e-recur-freq').style.display=er?'':'none';if(er)document.getElementById('e-recur-freq').value=er.freq||'monthly';document.getElementById('edit-modal').classList.add('open');}
+function openEdit(id){const t=txs.find(x=>x.id===id);if(!t)return;editingId=id;document.getElementById('e-name').value=t.name;document.getElementById('e-amount').value=t.amount;document.getElementById('e-type').value=t.type;document.getElementById('e-cat').value=t.cat;document.getElementById('e-date').value=t.date;document.getElementById('e-icon-preview').textContent=txIcon(t);document.getElementById('e-icon-picker').style.display='none';document.getElementById('e-bucket').value=t.bucket||'';const er=recurTxs.find(r=>r.name===t.name&&r.cat===t.cat);document.getElementById('e-recur').checked=!!er;document.getElementById('e-recur-freq').style.display=er?'':'none';if(er)document.getElementById('e-recur-freq').value=er.freq||'monthly';document.getElementById('edit-modal').classList.add('open');}
 function closeEdit(){document.getElementById('edit-modal').classList.remove('open');editingId=null;}
-function saveEdit(){const name=document.getElementById('e-name').value.trim();const amount=parseFloat(document.getElementById('e-amount').value);if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Invalid');return;}const idx=txs.findIndex(x=>x.id===editingId);if(idx===-1)return;const oldTx=txs[idx];const icon=document.getElementById('e-icon-preview').textContent||catIconDef(document.getElementById('e-cat').value);txs[idx]={...oldTx,name,amount,type:document.getElementById('e-type').value,cat:document.getElementById('e-cat').value,date:document.getElementById('e-date').value||today(),icon};const makeR=document.getElementById('e-recur').checked;const freq=document.getElementById('e-recur-freq').value;recurTxs=recurTxs.filter(r=>!(r.name===oldTx.name&&r.cat===oldTx.cat));if(makeR)recurTxs.push({id:Date.now()+1,name,amount,type:txs[idx].type,cat:txs[idx].cat,freq});save();closeEdit();showToast('✅ Updated!');renderDashboard();renderTransactions();}
+function saveEdit(){const name=document.getElementById('e-name').value.trim();const amount=parseFloat(document.getElementById('e-amount').value);if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Invalid');return;}const idx=txs.findIndex(x=>x.id===editingId);if(idx===-1)return;const oldTx=txs[idx];const icon=document.getElementById('e-icon-preview').textContent||catIconDef(document.getElementById('e-cat').value);txs[idx]={...oldTx,name,amount,type:document.getElementById('e-type').value,cat:document.getElementById('e-cat').value,date:document.getElementById('e-date').value||today(),icon,bucket:document.getElementById('e-bucket').value||''};const makeR=document.getElementById('e-recur').checked;const freq=document.getElementById('e-recur-freq').value;recurTxs=recurTxs.filter(r=>!(r.name===oldTx.name&&r.cat===oldTx.cat));if(makeR)recurTxs.push({id:Date.now()+1,name,amount,type:txs[idx].type,cat:txs[idx].cat,freq});save();closeEdit();showToast('✅ Updated!');renderDashboard();renderTransactions();}
 function deleteFromEdit(){if(!confirm('Delete?'))return;txs=txs.filter(x=>x.id!==editingId);save();closeEdit();showToast('Deleted');renderDashboard();renderTransactions();}
 
 // ─── SAVINGS ─────────────────────────────────────────────────────────────────
@@ -1347,56 +1487,46 @@ function renderAllocSummaryCards(){
   if(!container)return;
   const incomeVal=parseFloat(document.getElementById('alloc-summary-income')?.value)||0;
   const pill=document.getElementById('alloc-income-pill-btn');
-
   if(!incomeVal){
     container.innerHTML='<div class="alloc-sum-no-income">Enter your income above to see the breakdown per bucket</div>';
     if(pill)pill.textContent='Set income ↓';
     return;
   }
-
   if(pill)pill.textContent='Income: '+fmt(incomeVal);
-
   const m=thisMonth();
   const monthExpense=txs.filter(t=>t.type==='expense'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
   const monthSaved=savingsTxs.filter(t=>t.type==='deposit'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
   const monthInvested=investments.filter(i=>i.date.startsWith(m)).reduce((s,i)=>s+i.amount,0);
-
-  container.innerHTML=savAllocs.map(a=>{
+  container.innerHTML=savAllocs.map(function(a){
     const allocated=incomeVal*(a.pct/100);
     const n=a.name.toLowerCase();
-    // Determine "used" based on bucket type
     let used=0;
-    if(n.includes('sav'))          used=monthSaved;
-    else if(n.includes('invest'))  used=monthInvested;
-    else                           used=monthExpense; // needs/wants both map to expenses
-
+    if(n.includes('sav'))         used=monthSaved;
+    else if(n.includes('invest')) used=monthInvested;
+    else                          used=monthExpense;
     const pct=allocated>0?Math.min(100,Math.round(used/allocated*100)):0;
     const remaining=allocated-used;
     const isOver=used>allocated;
     const barColor=isOver?'#f03e3e':pct>=80?'#f59f00':a.color;
-    const bgAlpha='18';
-    const borderAlpha='44';
-
-    // Status text
-    const statusText=isOver
-      ? '⚠️ Over by '+fmt(used-allocated)
-      : pct===0 ? 'Not yet used'
-      : '✅ '+fmt(remaining)+' left';
-
-    return '<div class="alloc-sum-card" style="background:'+a.color+bgAlpha+';border-color:'+a.color+borderAlpha+'">'+
-      '<div class="alloc-sum-card-accent" style="background:'+a.color+'"></div>'+
-      '<div class="alloc-sum-name" style="color:'+a.color+'">'+a.name+'</div>'+
-      '<div class="alloc-sum-pct-badge" style="background:'+a.color+'22;color:'+a.color+'">'+a.pct+'% of income</div>'+
-      '<div class="alloc-sum-allocated" style="color:'+a.color+'">'+fmt(allocated)+'</div>'+
-      '<div class="alloc-sum-sub">Allocated this month</div>'+
-      '<div class="alloc-sum-bar-bg"><div class="alloc-sum-bar" style="width:'+pct+'%;background:'+barColor+'"></div></div>'+
-      '<div class="alloc-sum-footer">'+
-        '<div class="alloc-sum-used" style="color:var(--text2)">Used: <strong>'+fmt(used)+'</strong></div>'+
-        '<div class="alloc-sum-remaining" style="color:'+barColor+'">'+statusText+'</div>'+
-      '</div>'+
-    '</div>';
+    const statusText=isOver?'Over by '+fmt(used-allocated):pct===0?'Not yet used':'Left: '+fmt(remaining);
+    const rows=[];
+    rows.push('<div class="alloc-sum-card" style="background:'+a.color+'18;border-color:'+a.color+'44">');
+    rows.push('<div class="alloc-sum-card-accent" style="background:'+a.color+'"></div>');
+    rows.push('<div class="alloc-sum-name" style="color:'+a.color+'">'+a.name+'</div>');
+    rows.push('<div class="alloc-sum-pct-badge" style="background:'+a.color+'22;color:'+a.color+'">'+a.pct+'% of income</div>');
+    rows.push('<div class="alloc-sum-allocated" style="color:'+a.color+'">'+fmt(allocated)+'</div>');
+    rows.push('<div class="alloc-sum-sub">Allocated this month</div>');
+    rows.push('<div class="alloc-sum-bar-bg"><div class="alloc-sum-bar" style="width:'+pct+'%;background:'+barColor+'"></div></div>');
+    rows.push('<div class="alloc-sum-footer">');
+    rows.push('<div class="alloc-sum-used">Used: <strong>'+fmt(used)+'</strong></div>');
+    rows.push('<div class="alloc-sum-remaining" style="color:'+barColor+'">'+statusText+'</div>');
+    rows.push('</div>');
+    rows.push('<button class="alloc-quick-dep-btn" data-n="'+a.name+'" data-a="'+allocated.toFixed(2)+'" onclick="quickDeposit(this.dataset.n,+this.dataset.a)">+ Record '+fmt(allocated)+'</button>');
+    rows.push('</div>');
+    return rows.join('');
   }).join('');
 }
+
 
 function renderSavings(){
   renderAllocation();
@@ -1625,7 +1755,7 @@ function renderAllocTracker(income, expense){
     const pct=allocated>0?Math.min(100,Math.round(used/allocated*100)):0;
     const barColor=pct>=100?'#f03e3e':pct>=80?'#f59f00':a.color;
     const remaining=allocated-used;
-    return `<div class="alloc-track-item">
+    return `<div class="alloc-track-item" onclick="filterByBucket('${a.name}')" style="cursor:pointer">
       <div class="alloc-track-header">
         <div class="alloc-track-name"><span class="alloc-track-dot" style="background:${a.color}"></span>${a.name} <span style="font-size:11px;font-weight:400;color:var(--text3)">(${a.pct}%)</span></div>
         <div class="alloc-track-vals">${fmt(used)} <span style="color:var(--text3)">/ ${fmt(allocated)}</span></div>
@@ -1713,6 +1843,58 @@ function deleteInvestment(id){
   investments=investments.filter(i=>i.id!==id);save();renderSavings();renderDashboard();showToast('Deleted');
 }
 
+
+// ─── BUCKET RULES MANAGER ────────────────────────────────────────────────────
+
+function applyRulesToExisting(overwriteAll){
+  let updated=0;
+  txs.forEach(t=>{
+    if(overwriteAll||!t.bucket){
+      const detected=autoBucket(t.name);
+      if(detected&&(overwriteAll||!t.bucket)){
+        t.bucket=detected;
+        updated++;
+      }
+    }
+  });
+  save();
+  const msg=updated+' transaction'+(updated!==1?'s':'')+' updated'+(overwriteAll?' (all re-applied)':' (untagged only)');
+  const el=document.getElementById('apply-rules-result');
+  if(el)el.textContent='✅ '+msg;
+  showToast('✅ '+msg);
+  renderDashboard();renderTransactions();
+}
+function addBucketRule(){
+  const kw=document.getElementById('rule-keyword').value.trim().toLowerCase();
+  if(!kw){showToast('⚠️ Enter a keyword');return;}
+  if(bucketRules.some(r=>r.keyword===kw)){showToast('⚠️ Rule already exists');return;}
+  const bucket=document.getElementById('rule-bucket').value;
+  bucketRules.push({id:'r'+Date.now(),keyword:kw,bucket});
+  save();
+  document.getElementById('rule-keyword').value='';
+  renderBucketRules();
+  showToast('✅ Rule added: "'+kw+'" → '+bucket);
+}
+
+function deleteBucketRule(id){
+  bucketRules=bucketRules.filter(r=>r.id!==id);
+  save();renderBucketRules();
+}
+
+function renderBucketRules(){
+  const el=document.getElementById('rules-list');
+  if(!el)return;
+  if(!bucketRules.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">No rules yet.</div>';return;}
+  const sorted=[...bucketRules].sort((a,b)=>a.keyword.localeCompare(b.keyword));
+  el.innerHTML=sorted.map(r=>{
+    const col=bucketColor(r.bucket);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">'+
+      '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:'+col+'22;color:'+col+'">'+bucketIcon(r.bucket)+' '+r.bucket+'</span>'+
+      '<span style="flex:1;font-size:13px;font-weight:500">'+r.keyword+'</span>'+
+      '<button data-rid="'+r.id+'" onclick="deleteBucketRule(this.dataset.rid)" style="background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:6px;font-size:13px;color:var(--text3)" title="Remove">✕</button>'+
+    '</div>';
+  }).join('');
+}
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
 
