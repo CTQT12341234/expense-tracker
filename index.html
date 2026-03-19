@@ -660,7 +660,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
         </div>
         <div style="margin-bottom:8px">
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Who is this for?</div>
-          <div id="m-who-pills" onclick="var b=event.target.closest('[data-whoindex]');if(b){whoSelect(+b.dataset.whoindex);}" style="display:flex;gap:6px;flex-wrap:wrap;position:relative;z-index:10"></div>
+          <div id="m-who-pills" style="display:flex;gap:6px;flex-wrap:wrap"></div>
         </div>
         <div id="m-split-row" style="display:none;background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px">
           <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">🤝 How to split this?</div>
@@ -1517,6 +1517,8 @@ let investments = JSON.parse(localStorage.getItem('xp_investments')||'[]');
 let dashConfig  = JSON.parse(localStorage.getItem('xp_dash')||'null');
 let members     = JSON.parse(localStorage.getItem('xp_members')||'null');
 let activeMember = localStorage.getItem('xp_active_member')||'all';
+window._selectedWho = '';
+window._whoItems = [];
 let memberAllocs = JSON.parse(localStorage.getItem('xp_mallocs')||'{}'); // {memberId: [{id,name,pct,color}]}
 let bucketRules = JSON.parse(localStorage.getItem('xp_bucket_rules')||'null');
 let allocDonut = null;
@@ -1917,7 +1919,7 @@ function renderDashboard(){
     </div>`;
   renderCatChart(mTxs);renderTrendChart();renderAllocTracker(income,expense);
   renderWhoPills();
-  const rec=[...txs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  const rec=memberFilteredTxs([...txs]).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
   document.getElementById('recent-list').innerHTML=rec.length?rec.map(txHTML).join(''):`<div class="empty"><div class="empty-icon">📝</div>No transactions yet!</div>`;
 }
 
@@ -2178,7 +2180,7 @@ function addManual(){
   if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Enter a description and valid amount');return;}
   const icon=document.getElementById('m-icon-preview').textContent||catIconDef(document.getElementById('m-cat').value);
   const isR=document.getElementById('m-recur').checked;const freq=document.getElementById('m-recur-freq').value;
-  const bucket=document.getElementById('m-bucket').value||''; const memberId=document.getElementById('m-member').value||'';
+  const bucket=document.getElementById('m-bucket').value||''; const memberId=window._selectedWho||'';
       const splitVal = document.querySelector('input[name="m-split"]:checked')?.value || 'equal';
       const splitPct = parseInt(document.getElementById('m-split-pct')?.value||50);
       const tx={id:Date.now(),name,amount,type:document.getElementById('m-type').value,cat:document.getElementById('m-cat').value,date:document.getElementById('m-date').value||today(),icon,bucket,memberId,
@@ -2263,8 +2265,7 @@ function updateEditSplitRow(){
   if(p2)p2.textContent=100-(parseInt(document.getElementById('e-split-pct')?.value||50));
 }
 function updateSplitRow(){
-  var sel = document.getElementById('m-member');
-  var isShared = sel && sel.value === 'shared';
+  var isShared = window._selectedWho === 'shared';
   var row = document.getElementById('m-split-row');
   if(row) row.style.display = isShared ? 'block' : 'none';
   if(!isShared) return;
@@ -2291,68 +2292,39 @@ function whoSelect(idx){
   if(sel)sel.value=mid;
   renderWhoPills();
 }
+function syncWhoSelect(){
+  var sel=document.getElementById('m-member');
+  if(!sel)return;
+  var items=window._whoItems||[];
+  sel.innerHTML=items.map(function(item){return '<option value="'+item.mid+'">'+item.label+'</option>';}).join('');
+  sel.value=window._selectedWho||'';
+}
+
 function renderWhoPills(){
   var el=document.getElementById('m-who-pills');
   if(!el)return;
-  var selEl=document.getElementById('m-member');
-  var cur=selEl?selEl.value:'';
-  var items=[{mid:'',label:'All',color:'#3b5bdb'}];
+  var items=[];
   members.forEach(function(m){items.push({mid:m.id,label:m.emoji+' '+m.name,color:m.color});});
-  items.push({mid:'shared',label:'\uD83E\uDD1D Shared',color:'#7950f2'});
+  items.push({mid:'shared',label:'🤝 Shared',color:'#7950f2'});
   window._whoItems=items;
+  if(!window._selectedWho||!items.some(function(i){return i.mid===window._selectedWho;})){
+    window._selectedWho=items.length?items[0].mid:'';
+  }
+  syncWhoSelect();
   el.innerHTML=items.map(function(p,i){
-    var isActive=cur===p.mid;
+    var isActive=window._selectedWho===p.mid;
     var bg=isActive?p.color:'transparent';
     var col=isActive?'#fff':p.color;
-    return '<button type="button" data-whoindex="'+i+'" style="display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;border:1.5px solid '+p.color+';background:'+bg+';color:'+col+';font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0)">'+p.label+'</button>';
+    return '<button type="button" data-whoindex="'+i+'" onclick="whoSelect('+i+')" style="display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;border:1.5px solid '+p.color+';background:'+bg+';color:'+col+';font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0)">'+p.label+'</button>';
   }).join('');
+  updateSplitRow();
 }
 
-
-
-function updateEditSplitRow(){
-  var sel = document.getElementById('e-member');
-  var isShared = sel && sel.value === 'shared';
-  var row = document.getElementById('e-split-row');
-  if(row) row.style.display = isShared ? 'block' : 'none';
-  if(!isShared) return;
-  var m1=members[0], m2=members[1];
-  var n1=document.getElementById('e-split-m1'), n2=document.getElementById('e-split-m2');
-  if(n1&&m1)n1.textContent=m1.emoji+' '+m1.name;
-  if(n2&&m2)n2.textContent=m2.emoji+' '+m2.name;
-  var sv=document.querySelector('input[name="e-split"]:checked')?.value||'equal';
-  var cd=document.getElementById('e-split-custom');
-  if(cd)cd.style.display=sv==='custom'?'flex':'none';
-  var p2=document.getElementById('e-split-pct2');
-  if(p2)p2.textContent=100-(parseInt(document.getElementById('e-split-pct')?.value||50));
-}
-function updateSplitRow(){
-  var sel = document.getElementById('m-member');
-  var isShared = sel && sel.value === 'shared';
-  var row = document.getElementById('m-split-row');
-  if(row) row.style.display = isShared ? 'block' : 'none';
-  if(!isShared) return;
-  // Update member names
-  var m1 = members[0], m2 = members[1];
-  var n1 = document.getElementById('m-split-member1-name');
-  var n2 = document.getElementById('m-split-member2-name');
-  if(n1 && m1) n1.textContent = m1.emoji + ' ' + m1.name;
-  if(n2 && m2) n2.textContent = m2.emoji + ' ' + m2.name;
-  // Show/hide custom input
-  var splitVal = document.querySelector('input[name="m-split"]:checked')?.value || 'equal';
-  var customDiv = document.getElementById('m-split-custom');
-  if(customDiv) customDiv.style.display = splitVal === 'custom' ? 'flex' : 'none';
-  // Update partner %
-  var pct = parseInt(document.getElementById('m-split-pct')?.value || 50);
-  var pct2 = document.getElementById('m-split-pct2');
-  if(pct2) pct2.textContent = (100 - pct);
-}
 function whoSelect(idx){
   var items=window._whoItems||[];
   if(idx<0||idx>=items.length)return;
-  var mid=items[idx].mid;
-  var sel=document.getElementById('m-member');
-  if(sel)sel.value=mid;
+  window._selectedWho=items[idx].mid;
+  syncWhoSelect();
   renderWhoPills();
 }
 
