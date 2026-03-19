@@ -662,6 +662,18 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
           <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Who is this for?</div>
           <div id="m-who-pills" onclick="var b=event.target.closest('[data-whoindex]');if(b){whoSelect(+b.dataset.whoindex);}" style="display:flex;gap:6px;flex-wrap:wrap;position:relative;z-index:10"></div>
         </div>
+        <div id="m-split-row" style="display:none;background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:var(--radius);padding:10px 12px;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">🤝 How to split this?</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="m-split" value="equal" checked onchange="updateSplitRow()"> ⚖️ 50/50</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="m-split" value="custom" onchange="updateSplitRow()"> ✏️ Custom</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="m-split" value="none" onchange="updateSplitRow()"> 👤 No split</label>
+          </div>
+          <div id="m-split-custom" style="display:none;font-size:12px;color:var(--text2)">
+            <span id="m-split-member1-name">Me</span>: <input type="number" id="m-split-pct" min="0" max="100" value="50" style="width:50px;font-size:13px;padding:3px 6px;border-radius:6px;border:1.5px solid var(--border2)" oninput="updateSplitRow()">%
+            &nbsp;· <span id="m-split-member2-name">Partner</span>: <span id="m-split-pct2">50</span>%
+          </div>
+        </div>
         <div class="form-row">
           <select id="m-member" style="display:none"></select>
           <select id="m-bucket" style="max-width:150px">
@@ -1123,7 +1135,25 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
         <p><strong>Bucket</strong> — a category for how money is allocated: <em>Needs</em> (rent, food, bills), <em>Wants</em> (entertainment, dining out), <em>Investment</em> (stocks, ETFs), <em>Savings</em> (deposits to goals). Auto-detected from the category or description, or set manually.</p>
         <p><strong>Bucket auto-rules</strong> — keyword rules in Settings that automatically assign a bucket. E.g. "netflix" → Wants.</p>
         <p><strong>Member badge</strong> — coloured pill showing who the transaction belongs to (Me, Partner, Shared). Set in the Edit modal.</p>
-        <p><strong>Shared transactions</strong> — expenses both people contributed to. Use the Shared split setting to decide how they're counted in each person's individual view (50/50, custom %, or no split).</p>
+        <hr style="border:none;border-top:1px solid var(--border);margin:10px 0"/>
+        <p><strong>How shared transactions work</strong></p>
+        <p>There are two kinds of expenses:</p>
+        <p><strong>Personal</strong> — belongs 100% to one person. Tagged to Me or Partner.</p>
+        <p><strong>Shared</strong> — belongs to both people. Stored as full amount, split into each person's portion.</p>
+        <p>Example — Groceries $100, split 50/50:</p>
+        <p>• View All → $100 (full amount, counted once — no double-counting)<br>
+        • View Me → $50 (my share only)<br>
+        • View Partner → $50 (their share only)<br>
+        • View Shared → $100 (full amount with split breakdown: Me $50 · Partner $50)</p>
+        <p><strong>Split types:</strong><br>
+        ⚖️ 50/50 — each person pays half<br>
+        ✏️ Custom — you set the % (e.g. 70/30)<br>
+        👤 No split — appears in Shared and All views only</p>
+        <p><strong>Formula:</strong><br>
+        All = personal(Tin) + personal(Partner) + shared(full)<br>
+        Me = personal(Me) + shared(my portion)<br>
+        Partner = personal(Partner) + shared(their portion)</p>
+        <p><strong>½ split badge</strong> — shown on transactions in your individual view to indicate the amount is your share of a larger shared expense.</p>
         <p><strong>Recurring badge 🔁</strong> — marks transactions that match a recurring rule. They are auto-posted from the Recurring tab.</p>
       </div>
     </div>
@@ -1183,10 +1213,11 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
         <span>👥 Members &amp; Views</span><span class="help-chevron" id="chev-h-members">▸</span>
       </div>
       <div class="help-body" id="h-members">
-        <p><strong>🌐 All</strong> — shows the combined household picture. Every transaction, saving and investment from everyone.</p>
-        <p><strong>👤 Me / 👥 Partner</strong> — filters the dashboard and savings to show only transactions tagged to that person. Investment tracker, allocation, and recent transactions all reflect just their activity.</p>
-        <p><strong>🤝 Shared</strong> — transactions both people contributed to. The split setting controls how they appear in each person's individual view.</p>
-        <p><strong>Untagged transactions</strong> — transactions with no member set only appear in the All view. Tag them in the Edit modal to include them in individual views.</p>
+        <p><strong>🌐 All</strong> — household view. Personal expenses in full + shared expenses in full (counted once). Formula: All = personal(Tin) + personal(Partner) + shared(full amount).</p>
+        <p><strong>👤 Me / 👥 Partner</strong> — individual view. Your personal expenses + your split portion of shared expenses. Formula: Me = my personal + my share of shared.</p>
+        <p><strong>🤝 Shared</strong> — joint transactions only, shown at full amount with per-person split breakdown. Use this to see all household bills, rent, groceries.</p>
+        <p><strong>Untagged transactions</strong> — transactions with no member set appear in the All view only. Tag them via the Edit modal.</p>
+        <p><strong>Important</strong> — View All never double-counts. A $100 shared expense appears as $100 in All, not $200 ($50 Tin + $50 Partner + $100 shared).</p>
       </div>
     </div>
 
@@ -1416,7 +1447,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
       <select id="e-cat"><option>Food &amp; Dining</option><option>Transport</option><option>Shopping</option><option>Entertainment</option><option>Health</option><option>Housing</option><option>Utilities</option><option>Salary</option><option>Other</option></select>
     </div>
     <div class="modal-field"><label>Date</label><input type="date" id="e-date"/></div>
-    <div class="modal-field"><label>Member</label><select id="e-member" style="width:100%"><option value="">All members</option></select></div>
+    <div class="modal-field"><label>Member</label><select id="e-member" style="width:100%" onchange="updateEditSplitRow()"><option value="">All members</option></select></div><div id="e-split-row" style="display:none;background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:var(--radius);padding:10px 12px"><div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">🤝 Split</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="e-split" value="equal" onchange="updateEditSplitRow()"> ⚖️ 50/50</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="e-split" value="custom" onchange="updateEditSplitRow()"> ✏️ Custom</label><label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="radio" name="e-split" value="none" onchange="updateEditSplitRow()"> 👤 No split</label></div><div id="e-split-custom" style="display:none;font-size:12px;color:var(--text2)"><span id="e-split-m1">Me</span>: <input type="number" id="e-split-pct" min="0" max="100" value="50" style="width:50px;font-size:13px;padding:3px 6px;border-radius:6px;border:1.5px solid var(--border2)" oninput="updateEditSplitRow()">% · <span id="e-split-m2">Partner</span>: <span id="e-split-pct2">50</span>%</div></div>
     <div class="modal-field">
       <label>Bucket</label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -1989,6 +2020,17 @@ function autoBucket(name){
   return '';
 }
 
+
+function autoDetectEditBucket(explicit){
+  var name=document.getElementById('e-name');
+  var bucketSel=document.getElementById('e-bucket');
+  if(!name||!bucketSel)return;
+  var detected=autoBucket(name.value);
+  if(detected){
+    bucketSel.value=detected;
+    if(explicit)showToast('🪣 Bucket auto-detected: '+detected);
+  }
+}
 function applyAutoBucket(nameInputId, bucketSelectId){
   const name = document.getElementById(nameInputId)?.value||'';
   const sel  = document.getElementById(bucketSelectId);
@@ -2030,7 +2072,10 @@ function txHTML(t){
         <span class="cat-pill" style="background:${col}18;color:${col}">${t.cat}</span>
         <span>${t.date}</span>
         ${isR?'<span class="recur-badge">🔁 Recurring</span>':''}
-        ${(t.memberId&&t.memberId!=="")?'<span style="display:inline-flex;align-items:center;gap:3px;background:'+memberColor(t.memberId)+(t.memberId==="shared"?'55':'22')+';color:'+memberColor(t.memberId)+';border:1.5px solid '+memberColor(t.memberId)+(t.memberId==="shared"?'99':'55')+';border-radius:999px;padding:'+(t.memberId==="shared"?'3px 10px':'2px 8px')+';font-size:'+(t.memberId==="shared"?'12':'11')+'px;font-weight:700">'+memberEmoji(t.memberId)+' '+memberName(t.memberId)+'</span>':''}
+        ${(t.memberId&&t.memberId!=="")?'<span style="display:inline-flex;align-items:center;gap:3px;background:'+memberColor(t.memberId)+(t.memberId==="shared"?'55':'22')+';color:'+memberColor(t.memberId)+';border:1.5px solid '+memberColor(t.memberId)+(t.memberId==="shared"?'99':'55')+';border-radius:999px;padding:'+(t.memberId==="shared"?'3px 10px':'2px 8px')+';font-size:'+(t.memberId==="shared"?'12':'11')+'px;font-weight:700">'+memberEmoji(t.memberId)+' '+memberName(t.memberId)+'</span>'+''+
+        (t.memberId==="shared"&&t.splitType&&t.splitType!=="none"&&members.length>=2?'<span style="font-size:10px;color:var(--purple);background:var(--purple-bg);border-radius:999px;padding:1px 6px">'+members[0].emoji+' '+fmt(getShareForMember(t,members[0].id))+' · '+members[1].emoji+' '+fmt(getShareForMember(t,members[1].id))+'</span>':'')
+        :''}
+        ${t._isSharedSplit?'<span style="display:inline-flex;align-items:center;gap:2px;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);border-radius:999px;padding:1px 7px;font-size:10px;font-weight:600">½ '+fmt(t._fullAmount)+' split</span>':''}
         ${t.bucket?'<span class="bucket-badge" style="background:'+bucketColor(t.bucket)+'22;color:'+bucketColor(t.bucket)+';border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700">'+bucketIcon(t.bucket)+' '+t.bucket+'</span>':''}
       </div>
     </div>
@@ -2133,7 +2178,14 @@ function addManual(){
   if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Enter a description and valid amount');return;}
   const icon=document.getElementById('m-icon-preview').textContent||catIconDef(document.getElementById('m-cat').value);
   const isR=document.getElementById('m-recur').checked;const freq=document.getElementById('m-recur-freq').value;
-  const bucket=document.getElementById('m-bucket').value||''; const memberId=document.getElementById('m-member').value||''; const tx={id:Date.now(),name,amount,type:document.getElementById('m-type').value,cat:document.getElementById('m-cat').value,date:document.getElementById('m-date').value||today(),icon,bucket,memberId};
+  const bucket=document.getElementById('m-bucket').value||''; const memberId=document.getElementById('m-member').value||'';
+      const splitVal = document.querySelector('input[name="m-split"]:checked')?.value || 'equal';
+      const splitPct = parseInt(document.getElementById('m-split-pct')?.value||50);
+      const tx={id:Date.now(),name,amount,type:document.getElementById('m-type').value,cat:document.getElementById('m-cat').value,date:document.getElementById('m-date').value||today(),icon,bucket,memberId,
+        splitType: memberId==='shared' ? splitVal : undefined,
+        shareMe:   memberId==='shared' && splitVal==='custom' ? splitPct : (memberId==='shared' ? 50 : undefined),
+        sharePartner: memberId==='shared' && splitVal==='custom' ? (100-splitPct) : (memberId==='shared' ? 50 : undefined)
+      };
   txs.unshift(tx);if(isR)recurTxs.push({id:Date.now()+1,name,amount,type:tx.type,cat:tx.cat,freq});save();
   setVal('m-name','');setVal('m-amount','');setVal('m-bucket','');setVal('m-member','');document.getElementById('m-recur').checked=false;document.getElementById('m-recur-freq').style.display='none';document.getElementById('m-icon-picker').style.display='none';
   setDefaultIcon('m-icon-preview',document.getElementById('m-cat').value);showToast('✅ Transaction added!');renderDashboard();
@@ -2158,7 +2210,10 @@ function openEdit(id){const t=txs.find(x=>x.id===id);if(!t)return;editingId=id;s
   populateMemberSelectsIfNeeded();
   setVal('e-member',t.memberId||'');const er=recurTxs.find(r=>r.name===t.name&&r.cat===t.cat);document.getElementById('e-recur').checked=!!er;document.getElementById('e-recur-freq').style.display=er?'':'none';if(er)setVal('e-recur-freq',er.freq||'monthly');document.getElementById('edit-modal').classList.add('open');}
 function closeEdit(){document.getElementById('edit-modal').classList.remove('open');editingId=null;}
-function saveEdit(){const name=document.getElementById('e-name').value.trim();const amount=parseFloat(document.getElementById('e-amount').value);if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Invalid');return;}const idx=txs.findIndex(x=>x.id===editingId);if(idx===-1)return;const oldTx=txs[idx];const icon=document.getElementById('e-icon-preview').textContent||catIconDef(document.getElementById('e-cat').value);txs[idx]={...oldTx,name,amount,type:document.getElementById('e-type').value,cat:document.getElementById('e-cat').value,date:document.getElementById('e-date').value||today(),icon,bucket:document.getElementById('e-bucket').value||'',memberId:document.getElementById('e-member').value||''};const makeR=document.getElementById('e-recur').checked;const freq=document.getElementById('e-recur-freq').value;recurTxs=recurTxs.filter(r=>!(r.name===oldTx.name&&r.cat===oldTx.cat));if(makeR)recurTxs.push({id:Date.now()+1,name,amount,type:txs[idx].type,cat:txs[idx].cat,freq});save();closeEdit();showToast('✅ Updated!');renderDashboard();renderTransactions();}
+function saveEdit(){const name=document.getElementById('e-name').value.trim();const amount=parseFloat(document.getElementById('e-amount').value);if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Invalid');return;}const idx=txs.findIndex(x=>x.id===editingId);if(idx===-1)return;const oldTx=txs[idx];const icon=document.getElementById('e-icon-preview').textContent||catIconDef(document.getElementById('e-cat').value);txs[idx]={...oldTx,name,amount,type:document.getElementById('e-type').value,cat:document.getElementById('e-cat').value,date:document.getElementById('e-date').value||today(),icon,bucket:document.getElementById('e-bucket').value||'',memberId:document.getElementById('e-member').value||'',
+      splitType:(document.getElementById('e-member').value==='shared'?(document.querySelector('input[name="e-split"]:checked')?.value||'equal'):undefined),
+      shareMe:(document.getElementById('e-member').value==='shared'?parseInt(document.getElementById('e-split-pct')?.value||50):undefined),
+      sharePartner:(document.getElementById('e-member').value==='shared'?(100-parseInt(document.getElementById('e-split-pct')?.value||50)):undefined)};const makeR=document.getElementById('e-recur').checked;const freq=document.getElementById('e-recur-freq').value;recurTxs=recurTxs.filter(r=>!(r.name===oldTx.name&&r.cat===oldTx.cat));if(makeR)recurTxs.push({id:Date.now()+1,name,amount,type:txs[idx].type,cat:txs[idx].cat,freq});save();closeEdit();showToast('✅ Updated!');renderDashboard();renderTransactions();}
 function deleteFromEdit(){txs=txs.filter(x=>x.id!==editingId);save();closeEdit();showToast('Deleted');renderDashboard();renderTransactions();}
 
 // ─── SAVINGS ─────────────────────────────────────────────────────────────────
@@ -2184,11 +2239,50 @@ function deleteSavingsTx(id){savingsTxs=savingsTxs.filter(t=>t.id!==id);save();r
 
 
 // ─── MEMBERS ──────────────────────────────────────────────────────────────────
-function memberColor(id){ if(id==='shared')return '#7950f2'; const m=members.find(x=>x.id===id); return m?m.color:'#868e96'; }
-function memberName(id){  if(id==='shared')return 'Shared'; const m=members.find(x=>x.id===id); return m?m.name:''; }
-function memberEmoji(id){ if(id==='shared')return '🤝'; const m=members.find(x=>x.id===id); return m?m.emoji:'👤'; }
+function memberColor(id){ if(!id||id==='')return '#9099b5'; if(id==='shared')return '#7950f2'; const m=members.find(x=>x.id===id); return m?m.color:'#9099b5'; }
+function memberName(id){  if(!id||id==='')return ''; if(id==='shared')return 'Shared'; const m=members.find(x=>x.id===id); return m?m.name:''; }
+function memberEmoji(id){ if(!id||id==='')return ''; if(id==='shared')return '🤝'; const m=members.find(x=>x.id===id); return m?m.emoji:''; }
 
 
+
+
+function updateEditSplitRow(){
+  var sel = document.getElementById('e-member');
+  var isShared = sel && sel.value === 'shared';
+  var row = document.getElementById('e-split-row');
+  if(row) row.style.display = isShared ? 'block' : 'none';
+  if(!isShared) return;
+  var m1=members[0], m2=members[1];
+  var n1=document.getElementById('e-split-m1'), n2=document.getElementById('e-split-m2');
+  if(n1&&m1)n1.textContent=m1.emoji+' '+m1.name;
+  if(n2&&m2)n2.textContent=m2.emoji+' '+m2.name;
+  var sv=document.querySelector('input[name="e-split"]:checked')?.value||'equal';
+  var cd=document.getElementById('e-split-custom');
+  if(cd)cd.style.display=sv==='custom'?'flex':'none';
+  var p2=document.getElementById('e-split-pct2');
+  if(p2)p2.textContent=100-(parseInt(document.getElementById('e-split-pct')?.value||50));
+}
+function updateSplitRow(){
+  var sel = document.getElementById('m-member');
+  var isShared = sel && sel.value === 'shared';
+  var row = document.getElementById('m-split-row');
+  if(row) row.style.display = isShared ? 'block' : 'none';
+  if(!isShared) return;
+  // Update member names
+  var m1 = members[0], m2 = members[1];
+  var n1 = document.getElementById('m-split-member1-name');
+  var n2 = document.getElementById('m-split-member2-name');
+  if(n1 && m1) n1.textContent = m1.emoji + ' ' + m1.name;
+  if(n2 && m2) n2.textContent = m2.emoji + ' ' + m2.name;
+  // Show/hide custom input
+  var splitVal = document.querySelector('input[name="m-split"]:checked')?.value || 'equal';
+  var customDiv = document.getElementById('m-split-custom');
+  if(customDiv) customDiv.style.display = splitVal === 'custom' ? 'flex' : 'none';
+  // Update partner %
+  var pct = parseInt(document.getElementById('m-split-pct')?.value || 50);
+  var pct2 = document.getElementById('m-split-pct2');
+  if(pct2) pct2.textContent = (100 - pct);
+}
 function whoSelect(idx){
   var items=window._whoItems||[];
   if(idx<0||idx>=items.length)return;
@@ -2214,6 +2308,45 @@ function renderWhoPills(){
   }).join('');
 }
 
+
+
+function updateEditSplitRow(){
+  var sel = document.getElementById('e-member');
+  var isShared = sel && sel.value === 'shared';
+  var row = document.getElementById('e-split-row');
+  if(row) row.style.display = isShared ? 'block' : 'none';
+  if(!isShared) return;
+  var m1=members[0], m2=members[1];
+  var n1=document.getElementById('e-split-m1'), n2=document.getElementById('e-split-m2');
+  if(n1&&m1)n1.textContent=m1.emoji+' '+m1.name;
+  if(n2&&m2)n2.textContent=m2.emoji+' '+m2.name;
+  var sv=document.querySelector('input[name="e-split"]:checked')?.value||'equal';
+  var cd=document.getElementById('e-split-custom');
+  if(cd)cd.style.display=sv==='custom'?'flex':'none';
+  var p2=document.getElementById('e-split-pct2');
+  if(p2)p2.textContent=100-(parseInt(document.getElementById('e-split-pct')?.value||50));
+}
+function updateSplitRow(){
+  var sel = document.getElementById('m-member');
+  var isShared = sel && sel.value === 'shared';
+  var row = document.getElementById('m-split-row');
+  if(row) row.style.display = isShared ? 'block' : 'none';
+  if(!isShared) return;
+  // Update member names
+  var m1 = members[0], m2 = members[1];
+  var n1 = document.getElementById('m-split-member1-name');
+  var n2 = document.getElementById('m-split-member2-name');
+  if(n1 && m1) n1.textContent = m1.emoji + ' ' + m1.name;
+  if(n2 && m2) n2.textContent = m2.emoji + ' ' + m2.name;
+  // Show/hide custom input
+  var splitVal = document.querySelector('input[name="m-split"]:checked')?.value || 'equal';
+  var customDiv = document.getElementById('m-split-custom');
+  if(customDiv) customDiv.style.display = splitVal === 'custom' ? 'flex' : 'none';
+  // Update partner %
+  var pct = parseInt(document.getElementById('m-split-pct')?.value || 50);
+  var pct2 = document.getElementById('m-split-pct2');
+  if(pct2) pct2.textContent = (100 - pct);
+}
 function whoSelect(idx){
   var items=window._whoItems||[];
   if(idx<0||idx>=items.length)return;
@@ -2224,7 +2357,40 @@ function whoSelect(idx){
 }
 
 // ─── MEMBER SWITCHER ─────────────────────────────────────────────────────────
-function memberFilteredTxs(list){if(activeMember==='all')return list;if(activeMember==='shared')return list.filter(t=>t.memberId==='shared');return list.filter(t=>t.memberId===activeMember);}
+function getShareForMember(t, memberId){
+  // Returns the effective amount for this member for a shared transaction
+  var splitMode = t.splitType || localStorage.getItem('xp_split_mode') || 'equal';
+  if(splitMode === 'none') return 0;
+  if(splitMode === 'custom' || t.splitType === 'custom'){
+    // Use stored shares if available, else fall back to global %
+    var myPct = (t.shareMe !== undefined) ? t.shareMe : (parseFloat(localStorage.getItem('xp_split_pct_me')) || 50);
+    var partnerPct = 100 - myPct;
+    // Determine which member slot is "me" vs "partner"
+    var memberIds = members.map(function(m){return m.id;});
+    var myIdx = 0; // first member = "me"
+    var partnerIdx = 1;
+    if(memberId === memberIds[myIdx]) return t.amount * (myPct/100);
+    if(memberId === memberIds[partnerIdx]) return t.amount * (partnerPct/100);
+    return t.amount / Math.max(members.length, 1);
+  }
+  // Default 50/50
+  return t.amount / Math.max(members.length, 1);
+}
+
+function memberFilteredTxs(list){
+  if(activeMember==='all') return list; // all personal + all shared full amounts
+  if(activeMember==='shared') return list.filter(function(t){return t.memberId==='shared';});
+  // Individual view: personal in full + shared at split portion
+  var personal = list.filter(function(t){return t.memberId===activeMember;});
+  var shared = list.filter(function(t){return t.memberId==='shared';});
+  // Create virtual split records for shared txs
+  var splitRecords = shared.map(function(t){
+    var share = getShareForMember(t, activeMember);
+    if(share <= 0) return null;
+    return Object.assign({}, t, {amount: share, _isSharedSplit: true, _fullAmount: t.amount});
+  }).filter(Boolean);
+  return personal.concat(splitRecords);
+}
 function memberFilteredSavings(list){if(activeMember==='all')return list;if(activeMember==='shared')return list.filter(t=>t.memberId==='shared');return list.filter(t=>t.memberId===activeMember);}
 function memberFilteredInvestments(list){if(activeMember==='all')return list;if(activeMember==='shared')return list.filter(i=>i.memberId==='shared');return list.filter(i=>i.memberId===activeMember);}
 
@@ -2250,6 +2416,9 @@ function setActiveMember(id){
   save();
   renderMemberSwitcher();
   renderDashboard();
+  if(document.getElementById('view-transactions').classList.contains('active')){
+    renderTransactions();
+  }
   if(document.getElementById('view-savings').classList.contains('active')){
     renderSavings();
     // Auto-update income field to show member income
@@ -2438,6 +2607,7 @@ function renderAllocSummaryCards(){
       container2.innerHTML=
         '<div style="background:var(--purple-bg);border:1.5px solid var(--purple-border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:8px">'+
         '<p style="font-size:12px;color:var(--purple);font-weight:600;margin-bottom:8px">🤝 Shared — joint transactions only</p>'+
+        '<p style="font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5">Shared expenses shown in full here. Individual views (Tin/Thao) show each person split portion only.</p>'+
         '<p style="font-size:12px;color:var(--text2);margin-bottom:12px">Shared transactions are expenses or savings both of you contributed to. They do not have their own income or allocation plan.</p>'+
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">'+
           '<div style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;border:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Shared expenses this month</div><div style="font-size:18px;font-weight:700;color:var(--red)">'+fmt(sharedExp)+'</div></div>'+
