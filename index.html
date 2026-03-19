@@ -535,6 +535,34 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 .modal-recur-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--blue);cursor:pointer;}
 .modal-recur-row select{font-size:13px;padding:6px 10px;max-width:130px;}
 
+
+/* HELP SECTION */
+.help-item{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface);}
+.help-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);user-select:none;}
+.help-header:hover{background:var(--surface2);}
+.help-chevron{font-size:12px;color:var(--text3);transition:transform .2s;}
+.help-chevron.open{transform:rotate(90deg);}
+.help-body{display:none;padding:0 14px 12px;border-top:1px solid var(--border);}
+.help-body p{font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px;}
+.help-body hr{margin:10px 0;}
+.help-body strong{color:var(--text);font-weight:600;}
+
+
+/* SIDE BY SIDE MEMBER ALLOCATION */
+.member-alloc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:1rem;}
+.member-alloc-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+.member-alloc-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.member-alloc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.member-alloc-name{font-size:13px;font-weight:600;}
+.member-alloc-plan{font-size:11px;color:var(--text3);}
+.member-alloc-brow{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+.member-alloc-bname{font-size:12px;font-weight:500;}
+.member-alloc-bpct{font-size:11px;color:var(--text3);}
+.member-alloc-bucket{margin-bottom:10px;}
+.member-alloc-bar-bg{background:var(--surface3);border-radius:999px;height:6px;margin-top:4px;}
+.member-alloc-bar{height:6px;border-radius:999px;}
+.member-alloc-vals{font-size:10px;color:var(--text3);margin-top:2px;}
+
 /* TOAST */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 24px;border-radius:999px;font-size:13px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none;z-index:1000;box-shadow:var(--shadow-lg);white-space:nowrap;}
 .toast.show{opacity:1;}
@@ -824,8 +852,8 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
     <div class="alloc-card" id="alloc-card">
       <div class="alloc-header">
         <div class="alloc-header-left">
-          <h3>📊 Income allocation plan</h3>
-          <p>Set how your income is divided. Percentages must add up to 100%.</p>
+          <h3 id="alloc-plan-title">📊 Income allocation plan</h3>
+          <p id="alloc-plan-subtitle">Set how your income is divided. Switch views to edit per-member plans, or tap ⚙️ Set allocations per member.</p>
         </div>
         <div class="alloc-total-pill" id="alloc-total-pill">100%</div>
       </div>
@@ -1065,6 +1093,105 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
     <div id="apply-rules-result" style="font-size:12px;color:var(--text2);min-height:16px"></div>
   </div>
 
+
+  <div class="settings-section-title">❓ Help &amp; Glossary</div>
+
+  <!-- Help accordion -->
+  <div id="help-accordion" style="display:flex;flex-direction:column;gap:6px">
+
+    <!-- Dashboard -->
+    <div class="help-item">
+      <div class="help-header" onclick="toggleHelp('h-dashboard')">
+        <span>📊 Dashboard</span><span class="help-chevron" id="chev-h-dashboard">▸</span>
+      </div>
+      <div class="help-body" id="h-dashboard">
+        <p><strong>Income / Expenses / Saved / Net</strong> — your four headline numbers for the current month. Net = Income − Expenses − Savings deposited.</p>
+        <p><strong>Allocation tracker</strong> — compares how much you planned to spend/save per bucket (Needs, Wants, etc.) against what you've actually spent so far this month. Tap any bucket to jump to those transactions.</p>
+        <p><strong>Spending by category donut</strong> — breaks down your month's expenses by category (Food, Transport, etc.).</p>
+        <p><strong>Trend chart</strong> — compares your income vs expenses over the selected period (Week / 1M / 6M / 1Y / 5Y / YTD). Useful for spotting patterns.</p>
+        <p><strong>Recent transactions</strong> — the 5 most recent entries. Respects your current View (All / Me / Partner).</p>
+        <p><strong>View switcher</strong> — top bar with All / Me / Partner / Shared. Filters the entire dashboard to show only that person's numbers.</p>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="help-item">
+      <div class="help-header" onclick="toggleHelp('h-transactions')">
+        <span>📋 Transactions</span><span class="help-chevron" id="chev-h-transactions">▸</span>
+      </div>
+      <div class="help-body" id="h-transactions">
+        <p><strong>Bucket</strong> — a category for how money is allocated: <em>Needs</em> (rent, food, bills), <em>Wants</em> (entertainment, dining out), <em>Investment</em> (stocks, ETFs), <em>Savings</em> (deposits to goals). Auto-detected from the category or description, or set manually.</p>
+        <p><strong>Bucket auto-rules</strong> — keyword rules in Settings that automatically assign a bucket. E.g. "netflix" → Wants.</p>
+        <p><strong>Member badge</strong> — coloured pill showing who the transaction belongs to (Me, Partner, Shared). Set in the Edit modal.</p>
+        <p><strong>Shared transactions</strong> — expenses both people contributed to. Use the Shared split setting to decide how they're counted in each person's individual view (50/50, custom %, or no split).</p>
+        <p><strong>Recurring badge 🔁</strong> — marks transactions that match a recurring rule. They are auto-posted from the Recurring tab.</p>
+      </div>
+    </div>
+
+    <!-- Savings -->
+    <div class="help-item">
+      <div class="help-header" onclick="toggleHelp('h-savings')">
+        <span>🏦 Savings</span><span class="help-chevron" id="chev-h-savings">▸</span>
+      </div>
+      <div class="help-body" id="h-savings">
+        <p><strong>Income allocation plan</strong> — divide your income into buckets by percentage. E.g. 50% Needs, 20% Wants, 5% Investment, 25% Savings. The percentages must add to 100%.</p>
+        <p><strong>This month's allocation</strong> — enter your income and it calculates the dollar amount for each bucket. Tap "+ Record $X" to pre-fill a savings deposit or investment entry.</p>
+        <p><strong>Savings goals</strong> — named targets (e.g. Emergency Fund $5,000). Deposits are linked to a goal to track progress. Tap any goal to edit it.</p>
+        <p><strong>Record a savings movement</strong> — manually log a deposit or withdrawal. Link it to a goal and a member.</p>
+        <p><strong>Investment log</strong> — records of assets you've bought or sold (ETFs, crypto, property). Tagged to a member so each person's investments are separate.</p>
+        <hr style="border:none;border-top:1px solid var(--border);margin:10px 0"/>
+        <p><strong>📈 Investment tracker</strong> — tracks how much you're investing this quarter vs your allocation target.</p>
+        <p><strong>Quarterly income</strong> — total income received across all 3 months of the current quarter (Jan–Mar for Q1, Apr–Jun for Q2, etc.).</p>
+        <p><strong>Target</strong> — your investment allocation % × quarterly income. If you earn $9,000 in Q1 and your Investment bucket is 5%, your target is $450.</p>
+        <p><strong>Invested so far</strong> — total of all investment records logged this quarter. Turns amber at 80%, red when over target.</p>
+        <p><strong>Q1/Q2/Q3/Q4 Progress %</strong> — invested so far ÷ target × 100. E.g. 74% means you've invested $333 of a $450 quarterly target. Over 100% means you exceeded the target.</p>
+        <p><strong>What if I'm in Q2?</strong> — the tracker automatically shows the current quarter. In Q2 (Apr–Jun) it shows April–June income and investments. Q1 data is still visible in the investment log history.</p>
+        <p><strong>Rebalance suggestion</strong> — appears when you've been consistently over your investment % for 2+ of the last 3 months. It suggests bumping your Investment allocation % up to match your actual behaviour, and reducing another bucket (usually Wants) to keep the total at 100%. Tap "✅ Apply suggestion" to update automatically.</p>
+        <p><strong>On track</strong> — means your 3-month average investment % is within range of your target. No action needed.</p>
+      </div>
+    </div>
+
+    <!-- Recurring -->
+    <div class="help-item">
+      <div class="help-header" onclick="toggleHelp('h-recurring')">
+        <span>🔁 Recurring</span><span class="help-chevron" id="chev-h-recurring">▸</span>
+      </div>
+      <div class="help-body" id="h-recurring">
+        <p><strong>Recurring transactions</strong> — bills or income that repeat on a schedule (weekly, monthly, yearly). E.g. rent, Netflix, salary.</p>
+        <p><strong>Est. monthly net</strong> — the banner at the top shows your estimated monthly net cashflow from all recurring rules combined. Positive means recurring income exceeds recurring expenses.</p>
+        <p><strong>Post to this month</strong> — manually adds all recurring transactions to your transaction list for the current month. Only adds ones not already posted (checks name + category + month).</p>
+        <p><strong>Frequency</strong> — Weekly entries are multiplied by 4.33 when calculating monthly net (average weeks per month). Yearly entries are divided by 12.</p>
+      </div>
+    </div>
+
+    <!-- Budget -->
+    <div class="help-item">
+      <div class="help-header" onclick="toggleHelp('h-budget')">
+        <span>🎯 Budget</span><span class="help-chevron" id="chev-h-budget">▸</span>
+      </div>
+      <div class="help-body" id="h-budget">
+        <p><strong>Monthly limit</strong> — the maximum you want to spend per category this month. Enter a limit and tap Save.</p>
+        <p><strong>Progress bar</strong> — fills as you spend. Turns <span style="color:var(--amber);font-weight:600">amber at 80%</span> (getting close) and <span style="color:var(--red);font-weight:600">red at 100%</span> (limit reached or exceeded).</p>
+        <p><strong>No limit set</strong> — shows your actual spend with no target. Set a limit any time to start tracking.</p>
+        <p><strong>Budget resets monthly</strong> — limits stay saved but spending is counted per calendar month, so each new month starts fresh.</p>
+      </div>
+    </div>
+
+    <!-- Members -->
+    <div class="help-item">
+      <div class="help-header" onclick="toggleHelp('h-members')">
+        <span>👥 Members &amp; Views</span><span class="help-chevron" id="chev-h-members">▸</span>
+      </div>
+      <div class="help-body" id="h-members">
+        <p><strong>🌐 All</strong> — shows the combined household picture. Every transaction, saving and investment from everyone.</p>
+        <p><strong>👤 Me / 👥 Partner</strong> — filters the dashboard and savings to show only transactions tagged to that person. Investment tracker, allocation, and recent transactions all reflect just their activity.</p>
+        <p><strong>🤝 Shared</strong> — transactions both people contributed to. The split setting controls how they appear in each person's individual view.</p>
+        <p><strong>Untagged transactions</strong> — transactions with no member set only appear in the All view. Tag them in the Edit modal to include them in individual views.</p>
+      </div>
+    </div>
+
+  </div><!-- end help-accordion -->
+
   <div class="settings-section-title">About</div>
   <div class="setting-row">
     <div class="setting-info"><h4>Expense Tracker</h4><p>Built with Claude AI · Data stored locally in your browser</p></div>
@@ -1156,19 +1283,7 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
 </div>
 
 <!-- EDIT SAVINGS GOAL MODAL -->
-<div class="modal-overlay" id="edit-goal-modal" onclick="if(event.target===this)closeEditGoal()">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header"><h2>🎯 Edit Goal</h2><button class="modal-close" onclick="closeEditGoal()">✕</button></div>
-    <div class="modal-field"><label>Goal name</label><input type="text" id="eg-name"/></div>
-    <div class="modal-field"><label>Target amount</label><input type="number" id="eg-target" step="0.01" min="0"/></div>
-    <div class="modal-field"><label>Colour</label><input type="color" id="eg-color" style="height:44px;padding:6px;cursor:pointer"/></div>
-    <div class="modal-field"><label>Member</label><select id="eg-member"><option value="">All members</option></select></div>
-    <div class="modal-actions">
-      <button class="btn-danger" onclick="deleteFromEditGoal()">🗑 Delete</button>
-      <button class="submit-btn" onclick="saveEditGoal()">Save changes</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- MEMBER ALLOCATION MODAL -->
 <div class="modal-overlay" id="member-alloc-modal" onclick="if(event.target===this)closeMemberAllocModal()">
@@ -1227,13 +1342,53 @@ input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,9
     <div class="modal-field"><label>Target amount</label><input type="number" id="eg-target" step="0.01" min="0"/></div>
     <div class="modal-field">
       <label>Colour</label>
-      <input type="color" id="eg-color" style="width:100%;height:44px;padding:4px;border-radius:var(--radius);border:1.5px solid var(--border2);cursor:pointer"/>
+      <input type="color" id="eg-color" value="#1098ad" style="width:100%;height:44px;padding:4px;border-radius:var(--radius);border:1.5px solid var(--border2);cursor:pointer"/>
     </div>
     <div class="modal-field"><label>Member</label><select id="eg-member" style="width:100%"><option value="">All members</option></select></div>
     <div class="modal-actions">
       <button class="btn-danger" onclick="deleteFromEditGoal()">🗑 Delete</button>
       <button class="submit-btn" onclick="saveEditGoal()">Save changes</button>
     </div>
+  </div>
+</div>
+
+
+<!-- EDIT MEMBER MODAL -->
+<div class="modal-overlay" id="edit-member-modal" onclick="if(event.target===this)closeEditMember()">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">
+      <h2>✏️ Edit Member</h2>
+      <button class="modal-close" onclick="closeEditMember()">✕</button>
+    </div>
+    <div class="modal-field">
+      <label>Name</label>
+      <input type="text" id="em-name" placeholder="e.g. Partner" maxlength="20"/>
+    </div>
+    <div class="modal-field">
+      <label>Emoji</label>
+      <div id="em-emoji-picker" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      <input type="hidden" id="em-emoji" value="👤"/>
+    </div>
+    <div class="modal-field">
+      <label>Colour</label>
+      <input type="color" id="em-color" value="#3b5bdb" style="width:100%;height:44px;padding:4px;border-radius:var(--radius);border:1.5px solid var(--border2);cursor:pointer"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-danger" onclick="deleteEditMember()">🗑 Remove</button>
+      <button class="submit-btn" onclick="saveEditMember()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- SPENDING OVERVIEW MODAL -->
+<div class="modal-overlay" id="spending-overview-modal" onclick="if(event.target===this)closeSpendingOverview()" style="z-index:1100">
+  <div class="modal" style="max-width:520px;max-height:85vh;overflow-y:auto">
+    <div class="modal-header" style="position:sticky;top:0;background:var(--surface);z-index:1">
+      <h2>💰 Spending Overview</h2>
+      <button class="modal-close" onclick="closeSpendingOverview()">✕</button>
+    </div>
+    <div id="spending-overview-body"></div>
   </div>
 </div>
 
@@ -1723,8 +1878,8 @@ function renderDashboard(){
       <div class="metric-sub">Total balance: ${fmt(savingsBalance())}</div>
       <div class="metric-hint">Tap to manage →</div>
     </div>
-    <div class="metric balance-card" onclick="goToTransactions('','')">
-      <div class="metric-icon">${balance>=0?'📈':'📉'}</div><div class="metric-label">Net (after savings)</div>
+    <div class="metric balance-card" onclick="openSpendingOverview()">
+      <div class="metric-icon">${balance>=0?'💰':'📉'}</div><div class="metric-label">Available to Spend</div>
       <div class="metric-value">${(balance<0?'-':'')+fmt(Math.abs(balance))}</div>
       <div class="metric-sub">${balance>=0?'Available':'Deficit'} this month</div>
       <div class="metric-hint">Tap to view →</div>
@@ -1875,7 +2030,7 @@ function txHTML(t){
         <span class="cat-pill" style="background:${col}18;color:${col}">${t.cat}</span>
         <span>${t.date}</span>
         ${isR?'<span class="recur-badge">🔁 Recurring</span>':''}
-        ${t.memberId?'<span class="member-dot" style="background:'+memberColor(t.memberId)+'"></span> <span style="font-size:10px;color:'+memberColor(t.memberId)+';font-weight:600">'+(memberEmoji(t.memberId)||'')+' '+memberName(t.memberId)+'</span>':''}
+        ${(t.memberId&&t.memberId!=="")?'<span style="display:inline-flex;align-items:center;gap:3px;background:'+memberColor(t.memberId)+(t.memberId==="shared"?'55':'22')+';color:'+memberColor(t.memberId)+';border:1.5px solid '+memberColor(t.memberId)+(t.memberId==="shared"?'99':'55')+';border-radius:999px;padding:'+(t.memberId==="shared"?'3px 10px':'2px 8px')+';font-size:'+(t.memberId==="shared"?'12':'11')+'px;font-weight:700">'+memberEmoji(t.memberId)+' '+memberName(t.memberId)+'</span>':''}
         ${t.bucket?'<span class="bucket-badge" style="background:'+bucketColor(t.bucket)+'22;color:'+bucketColor(t.bucket)+';border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700">'+bucketIcon(t.bucket)+' '+t.bucket+'</span>':''}
       </div>
     </div>
@@ -2097,6 +2252,10 @@ function setActiveMember(id){
   renderDashboard();
   if(document.getElementById('view-savings').classList.contains('active')){
     renderSavings();
+    // Auto-update income field to show member income
+    var m=thisMonth();
+    var mInc=memberFilteredTxs(txs.filter(function(t){return t.type==='income'&&t.date.startsWith(m);})).reduce(function(s,t){return s+t.amount;},0);
+    if(mInc>0){setVal('alloc-summary-income',mInc);renderAllocSummaryCards();}
   }
 }
 
@@ -2117,14 +2276,15 @@ function saveSplitPct(val){localStorage.setItem('xp_split_pct_me',Math.min(100,M
 function renderSettingsMembers(){
   var el=document.getElementById('settings-members-list');if(!el)return;
   el.innerHTML=members.map(function(m){
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">'+
-      '<span style="width:12px;height:12px;border-radius:50%;background:'+m.color+';flex-shrink:0"></span>'+
-      '<span style="flex:1;font-size:13px;font-weight:500">'+m.emoji+' '+m.name+'</span>'+
-      '<button data-mid="'+m.id+'" onclick="removeMember(this.dataset.mid)" style="background:none;border:none;cursor:pointer;padding:3px 7px;border-radius:6px;font-size:12px;color:var(--text3)">✕</button>'+
+    return '<div data-mid="'+m.id+'" onclick="openEditMember(this.dataset.mid)" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);cursor:pointer" onmouseover="this.style.borderColor=\''+m.color+'\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
+      '<span style="width:14px;height:14px;border-radius:50%;background:'+m.color+';flex-shrink:0;box-shadow:0 0 0 2px '+m.color+'44"></span>'+
+      '<span style="flex:1;font-size:13px;font-weight:600">'+m.emoji+' '+m.name+'</span>'+
+      '<span style="font-size:11px;color:var(--text3);font-weight:500">Edit →</span>'+
     '</div>';
   }).join('');
 }
 function addMemberPrompt(){
+  closeSettings();
   setVal('new-member-name','');setVal('new-member-emoji','👤');
   var colors=['#3b5bdb','#e64980','#f59f00','#12b886','#1098ad','#7950f2'];
   setVal('new-member-color',colors[members.length%colors.length]);
@@ -2156,18 +2316,32 @@ function removeMember(id){
 
 // ─── ALLOCATION ───────────────────────────────────────────────────────────────
 function renderAllocation(){
-  var total=savAllocs.reduce(function(s,a){return s+a.pct;},0);
+  // Hide the allocation plan editor in All view (we show side-by-side instead)
+  var planCard=document.getElementById('alloc-card');
+  if(planCard) planCard.style.display=(activeMember==='all'||activeMember==='shared')?'none':'';
+
+  var activeAllocs = (activeMember && activeMember!=='all' && activeMember!=='shared')
+    ? getAllocsForMember(activeMember)
+    : savAllocs;
+  var viewMember = (activeMember && activeMember!=='all' && activeMember!=='shared') ? members.find(function(m){return m.id===activeMember;}) : null;
+  var hasCustom = viewMember && memberAllocs[viewMember.id] && memberAllocs[viewMember.id].length>0;
+  var planLabel = viewMember ? viewMember.emoji+' '+viewMember.name : 'Shared';
+  var titleEl=document.getElementById('alloc-plan-title');
+  var subEl=document.getElementById('alloc-plan-subtitle');
+  if(titleEl) titleEl.textContent='📊 '+planLabel+' allocation plan'+(hasCustom?' (custom)':'');
+  if(subEl) subEl.textContent=viewMember?'Showing '+planLabel+(hasCustom?' custom plan — tap ⚙️ Settings to edit.':' shared plan. Set a custom plan via ⚙️ Settings → Members → Set allocations per member.'):'Set how your income is divided. Percentages must add up to 100%.';
+  var total=activeAllocs.reduce(function(s,a){return s+a.pct;},0);
   var pill=document.getElementById('alloc-total-pill');
   var pctEl=document.getElementById('alloc-donut-pct');
   if(pill){pill.textContent=total+'%';pill.className='alloc-total-pill '+(total===100?'ok':'warn');}
   if(pctEl)pctEl.textContent=total+'%';
   if(allocDonut)allocDonut.destroy();
   var canvas=document.getElementById('alloc-donut');
-  if(canvas){allocDonut=new Chart(canvas,{type:'doughnut',data:{labels:savAllocs.map(function(a){return a.name;}),datasets:[{data:savAllocs.map(function(a){return a.pct;}),backgroundColor:savAllocs.map(function(a){return a.color;}),borderWidth:2,borderColor:theme==='dark'?'#1e2030':'#fff',hoverOffset:4}]},options:{responsive:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.raw+'%';}}}},cutout:'65%'}});}
+  if(canvas){allocDonut=new Chart(canvas,{type:'doughnut',data:{labels:activeAllocs.map(function(a){return a.name;}),datasets:[{data:activeAllocs.map(function(a){return a.pct;}),backgroundColor:activeAllocs.map(function(a){return a.color;}),borderWidth:2,borderColor:theme==='dark'?'#1e2030':'#fff',hoverOffset:4}]},options:{responsive:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.raw+'%';}}}},cutout:'65%'}});}
   var lg=document.getElementById('alloc-legend');
-  if(lg)lg.innerHTML=savAllocs.map(function(a){return '<div class="alloc-legend-item"><span class="alloc-legend-dot" style="background:'+a.color+'"></span>'+a.name+' <strong>'+a.pct+'%</strong></div>';}).join('');
+  if(lg)lg.innerHTML=activeAllocs.map(function(a){return '<div class="alloc-legend-item"><span class="alloc-legend-dot" style="background:'+a.color+'"></span>'+a.name+' <strong>'+a.pct+'%</strong></div>';}).join('');
   var bc=document.getElementById('alloc-buckets');
-  if(bc)bc.innerHTML=savAllocs.map(function(a,i){
+  if(bc)bc.innerHTML=activeAllocs.map(function(a,i){
     return '<div class="alloc-bucket-row" id="abr-'+a.id+'">'+
       '<div style="position:relative;flex-shrink:0"><div class="alloc-color-dot" style="background:'+a.color+'" data-cid="'+a.id+'" onclick="openColorPicker(this.dataset.cid)" title="Change colour"></div><input class="alloc-color-input" type="color" id="ac-'+a.id+'" value="'+a.color+'" data-aid="'+a.id+'" oninput="updateAllocColor(this.dataset.aid,this.value)"/></div>'+
       '<input class="alloc-name-input" value="'+a.name+'" placeholder="Bucket name" data-aid="'+a.id+'" oninput="updateAllocName(this.dataset.aid,this.value)" title="Edit name"/>'+
@@ -2234,7 +2408,8 @@ function useMonthIncome(){
 
 // ─── ALLOC SUMMARY CARDS ──────────────────────────────────────────────────────
 function prefillMonthIncome(){
-  var m=thisMonth();var income=txs.filter(function(t){return t.type==='income'&&t.date.startsWith(m);}).reduce(function(s,t){return s+t.amount;},0);
+  var m=thisMonth();
+  var income=memberFilteredTxs(txs.filter(function(t){return t.type==='income'&&t.date.startsWith(m);})).reduce(function(s,t){return s+t.amount;},0);
   var inp=document.getElementById('alloc-summary-income');
   if(inp){inp.value=income||'';renderAllocSummaryCards();}
   if(income)showToast('Using '+fmt(income)+' income for '+new Date().toLocaleString('default',{month:'long'}));
@@ -2242,15 +2417,59 @@ function prefillMonthIncome(){
 }
 function renderAllocSummaryCards(){
   var container=document.getElementById('alloc-summary-cards');if(!container)return;
+  // Side-by-side view when All members are shown
+  if(activeMember==='all' && members.length>0){
+    renderSideBySideAlloc();
+    var titleEl=document.querySelector('.alloc-summary-header-left h3');
+    var subEl=document.querySelector('.alloc-summary-header-left p');
+    if(titleEl)titleEl.textContent='📊 All members — side by side';
+    if(subEl)subEl.textContent='Each member allocation plan vs actual spending this month. Enter income above to see targets.';
+    return;
+  }
+  // Shared view — show joint spending summary instead of allocation plan
+  if(activeMember==='shared'){
+    var m=thisMonth();
+    var sharedExp=txs.filter(function(t){return t.type==='expense'&&t.date.startsWith(m)&&t.memberId==='shared';}).reduce(function(s,t){return s+t.amount;},0);
+    var sharedSav=savingsTxs.filter(function(t){return t.type==='deposit'&&t.date.startsWith(m)&&t.memberId==='shared';}).reduce(function(s,t){return s+t.amount;},0);
+    var sharedInv=investments.filter(function(i){return i.date.startsWith(m)&&i.memberId==='shared';}).reduce(function(s,i){return s+i.amount;},0);
+    var sharedExpAll=txs.filter(function(t){return t.type==='expense'&&t.memberId==='shared';}).reduce(function(s,t){return s+t.amount;},0);
+    var container2=document.getElementById('alloc-summary-cards');
+    if(container2){
+      container2.innerHTML=
+        '<div style="background:var(--purple-bg);border:1.5px solid var(--purple-border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:8px">'+
+        '<p style="font-size:12px;color:var(--purple);font-weight:600;margin-bottom:8px">🤝 Shared — joint transactions only</p>'+
+        '<p style="font-size:12px;color:var(--text2);margin-bottom:12px">Shared transactions are expenses or savings both of you contributed to. They do not have their own income or allocation plan.</p>'+
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">'+
+          '<div style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;border:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Shared expenses this month</div><div style="font-size:18px;font-weight:700;color:var(--red)">'+fmt(sharedExp)+'</div></div>'+
+          '<div style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;border:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Shared savings this month</div><div style="font-size:18px;font-weight:700;color:var(--teal)">'+fmt(sharedSav)+'</div></div>'+
+          '<div style="background:var(--surface);border-radius:var(--radius);padding:10px 12px;border:1px solid var(--border)"><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px">All-time shared expenses</div><div style="font-size:18px;font-weight:700;color:var(--text)">'+fmt(sharedExpAll)+'</div></div>'+
+        '</div>'+
+        '</div>';
+    }
+    var titleEl=document.querySelector('.alloc-summary-header-left h3');
+    var subEl=document.querySelector('.alloc-summary-header-left p');
+    if(titleEl)titleEl.textContent='🤝 Shared transactions';
+    if(subEl)subEl.textContent='Joint expenses and savings both members contributed to.';
+    return;
+  }
   var incomeVal=parseFloat(document.getElementById('alloc-summary-income')?document.getElementById('alloc-summary-income').value:0)||0;
   var pill=document.getElementById('alloc-income-pill-btn');
-  if(!incomeVal){container.innerHTML='<div class="alloc-sum-no-income">Enter your income above to see the breakdown per bucket</div>';if(pill)pill.textContent='Set income ↓';return;}
-  if(pill)pill.textContent='Income: '+fmt(incomeVal);
+  // Show whose plan we're viewing
+  var viewingMember = (activeMember && activeMember!=='all' && activeMember!=='shared') ? members.find(function(m){return m.id===activeMember;}) : null;
+  var planLabel = viewingMember ? viewingMember.emoji+' '+viewingMember.name : 'Shared';
+  var hasCustom = viewingMember && memberAllocs[viewingMember.id] && memberAllocs[viewingMember.id].length>0;
+  // Update section title
+  var titleEl = document.querySelector('.alloc-summary-header-left h3');
+  if(titleEl) titleEl.textContent = '📊 '+planLabel+(hasCustom?' (custom plan)':' (shared plan)');
+  if(!incomeVal){container.innerHTML='<div class="alloc-sum-no-income">Enter income above to see '+planLabel+' breakdown</div>';if(pill)pill.textContent='Set income ↓';return;}
+  var memberLabel = (activeMember&&activeMember!=='all'&&activeMember!=='shared') ? (members.find(function(m){return m.id===activeMember;})||{emoji:'',name:''}) : null;
+  if(pill)pill.textContent='Income: '+fmt(incomeVal)+(memberLabel?' · '+memberLabel.emoji+' '+memberLabel.name:'');
   var m=thisMonth();
   var monthExpense=memberFilteredTxs(txs.filter(function(t){return t.type==='expense'&&t.date.startsWith(m);})).reduce(function(s,t){return s+t.amount;},0);
   var monthSaved=memberFilteredSavings(savingsTxs.filter(function(t){return t.type==='deposit'&&t.date.startsWith(m);})).reduce(function(s,t){return s+t.amount;},0);
   var monthInvested=memberFilteredInvestments(investments.filter(function(i){return i.date.startsWith(m);})).reduce(function(s,i){return s+i.amount;},0);
-  container.innerHTML=savAllocs.map(function(a){
+  var activeAllocs=(activeMember&&activeMember!=='all'&&activeMember!=='shared')?getAllocsForMember(activeMember):savAllocs;
+  container.innerHTML=activeAllocs.map(function(a){
     var allocated=incomeVal*(a.pct/100);var n=a.name.toLowerCase();var used=0;
     if(n.includes('sav'))used=monthSaved;
     else if(n.includes('invest'))used=monthInvested;
@@ -2346,9 +2565,9 @@ function renderInvestments(){
 }
 function deleteInvestment(id){investments=investments.filter(function(i){return String(i.id)!==String(id);});save();renderSavings();renderDashboard();showToast('Deleted');}
 var editingInvId=null;
-function openEditInvestment(id){var inv=investments.find(function(i){return i.id===id;});if(!inv)return;editingInvId=id;setVal('ei-name',inv.name||'');setVal('ei-amount',inv.amount||'');setVal('ei-type',inv.itype||'buy');setVal('ei-notes',inv.notes||'');setVal('ei-date',inv.date||today());setVal('ei-bucket',inv.bucket||'Investment');var eim=document.getElementById('ei-member');if(eim){var opts='<option value="">All members</option>'+members.map(function(m){return '<option value="'+m.id+'">'+m.emoji+' '+m.name+'</option>';}).join('')+'<option value="shared">🤝 Shared</option>';eim.innerHTML=opts;}setVal('ei-member',inv.memberId||'');document.getElementById('inv-edit-modal').classList.add('open');}
+function openEditInvestment(id){var inv=investments.find(function(i){return String(i.id)===String(id);});if(!inv)return;editingInvId=id;setVal('ei-name',inv.name||'');setVal('ei-amount',inv.amount||'');setVal('ei-type',inv.itype||'buy');setVal('ei-notes',inv.notes||'');setVal('ei-date',inv.date||today());setVal('ei-bucket',inv.bucket||'Investment');var eim=document.getElementById('ei-member');if(eim){var opts='<option value="">All members</option>'+members.map(function(m){return '<option value="'+m.id+'">'+m.emoji+' '+m.name+'</option>';}).join('')+'<option value="shared">🤝 Shared</option>';eim.innerHTML=opts;}setVal('ei-member',inv.memberId||'');document.getElementById('inv-edit-modal').classList.add('open');}
 function closeEditInvestment(){document.getElementById('inv-edit-modal').classList.remove('open');editingInvId=null;}
-function saveEditInvestment(){var name=document.getElementById('ei-name').value.trim();var amount=parseFloat(document.getElementById('ei-amount').value);if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Invalid');return;}var idx=investments.findIndex(function(i){return i.id===editingInvId;});if(idx===-1)return;investments[idx]={...investments[idx],name:name,amount:amount,itype:document.getElementById('ei-type').value,notes:document.getElementById('ei-notes').value.trim(),date:document.getElementById('ei-date').value||today(),bucket:document.getElementById('ei-bucket').value||'Investment',memberId:document.getElementById('ei-member').value||''};save();closeEditInvestment();showToast('✅ Investment updated!');renderSavings();renderDashboard();}
+function saveEditInvestment(){var name=document.getElementById('ei-name').value.trim();var amount=parseFloat(document.getElementById('ei-amount').value);if(!name||isNaN(amount)||amount<=0){showToast('⚠️ Invalid');return;}var idx=investments.findIndex(function(i){return String(i.id)===String(editingInvId);});if(idx===-1)return;investments[idx]={...investments[idx],name:name,amount:amount,itype:document.getElementById('ei-type').value,notes:document.getElementById('ei-notes').value.trim(),date:document.getElementById('ei-date').value||today(),bucket:document.getElementById('ei-bucket').value||'Investment',memberId:document.getElementById('ei-member').value||''};save();closeEditInvestment();showToast('✅ Investment updated!');renderSavings();renderDashboard();}
 function deleteFromEditInvestment(){investments=investments.filter(function(i){return String(i.id)!==String(editingInvId);});save();closeEditInvestment();showToast('Deleted');renderSavings();renderDashboard();}
 
 // ─── SAVINGS ──────────────────────────────────────────────────────────────────
@@ -2385,15 +2604,22 @@ function saveEditGoal(){var name=document.getElementById('eg-name').value.trim()
 function deleteFromEditGoal(){savGoals=savGoals.filter(function(g){return g.id!==editingGoalId;});save();closeEditGoal();renderSavings();showToast('Goal deleted');}
 
 function renderSavings(){
+  // Show/hide income input for Shared view
+  var incRow=document.querySelector('.alloc-income-input-row');
+  if(incRow)incRow.style.display=(activeMember==='shared'||activeMember==='all')?'none':'flex';
+  var incPill=document.getElementById('alloc-income-pill-btn');
+  if(incPill)incPill.style.display=(activeMember==='shared'||activeMember==='all')?'none':'';
   renderAllocation();renderAllocSummaryCards();populateMemberSelects();
-  var totalDep=savingsTxs.filter(function(t){return t.type==='deposit';}).reduce(function(s,t){return s+t.amount;},0);
-  var totalWith=savingsTxs.filter(function(t){return t.type==='withdrawal';}).reduce(function(s,t){return s+t.amount;},0);
+  var filtSav=memberFilteredSavings(savingsTxs);
+  var filtInvAll=memberFilteredInvestments(investments);
+  var totalDep=filtSav.filter(function(t){return t.type==='deposit';}).reduce(function(s,t){return s+t.amount;},0);
+  var totalWith=filtSav.filter(function(t){return t.type==='withdrawal';}).reduce(function(s,t){return s+t.amount;},0);
   var bal=totalDep-totalWith;var m=thisMonth();
-  var mDep=savingsTxs.filter(function(t){return t.type==='deposit'&&t.date.startsWith(m);}).reduce(function(s,t){return s+t.amount;},0);
-  var invNet=investments.filter(function(i){return i.itype==='buy'||i.itype==='partial';}).reduce(function(s,i){return s+i.amount;},0)-investments.filter(function(i){return i.itype==='sell';}).reduce(function(s,i){return s+i.amount;},0);
+  var mDep=filtSav.filter(function(t){return t.type==='deposit'&&t.date.startsWith(m);}).reduce(function(s,t){return s+t.amount;},0);
+  var invNet=filtInvAll.filter(function(i){return i.itype==='buy'||i.itype==='partial';}).reduce(function(s,i){return s+i.amount;},0)-filtInvAll.filter(function(i){return i.itype==='sell';}).reduce(function(s,i){return s+i.amount;},0);
   document.getElementById('savings-overview').innerHTML=
-    '<div class="sav-stat balance"><div class="sav-stat-label">🏦 Total balance</div><div class="sav-stat-val">'+fmt(bal)+'</div><div class="sav-stat-sub">All-time deposits minus withdrawals</div></div>'+
-    '<div class="sav-stat deposited"><div class="sav-stat-label">⬆️ Deposited this month</div><div class="sav-stat-val">'+fmt(mDep)+'</div><div class="sav-stat-sub">All-time: '+fmt(totalDep)+'</div></div>'+
+    '<div class="sav-stat balance"><div class="sav-stat-label">🏦 Savings balance</div><div class="sav-stat-val">'+fmt(bal)+'</div><div class="sav-stat-sub">All-time deposits minus withdrawals</div></div>'+
+    '<div class="sav-stat deposited"><div class="sav-stat-label">↕️ Transfer this month</div><div class="sav-stat-val">'+fmt(mDep)+'</div><div class="sav-stat-sub">All-time: '+fmt(totalDep)+'</div></div>'+
     '<div class="sav-stat" style="background:var(--purple-bg);border-color:var(--purple-border)"><div class="sav-stat-label" style="color:var(--purple)">📈 Total invested</div><div class="sav-stat-val" style="color:var(--purple)">'+fmt(invNet)+'</div><div class="sav-stat-sub">'+investments.length+' records</div></div>';
   var sel=document.getElementById('sav-goal-link');
   if(sel)sel.innerHTML='<option value="">No goal linked</option>'+savGoals.map(function(g){return '<option value="'+g.id+'">'+g.name+'</option>';}).join('');
@@ -2564,7 +2790,7 @@ function saveEditSav(){
   var desc=document.getElementById('es-desc').value.trim();
   var amount=parseFloat(document.getElementById('es-amount').value);
   if(!desc||isNaN(amount)||amount<=0){showToast('⚠️ Enter description and amount');return;}
-  var idx=savingsTxs.findIndex(function(x){return x.id===editingSavId;});
+  var idx=savingsTxs.findIndex(function(x){return String(x.id)===String(editingSavId);});
   if(idx===-1)return;
   savingsTxs[idx]={
     ...savingsTxs[idx],
@@ -2582,7 +2808,404 @@ function deleteFromEditSav(){
   savingsTxs=savingsTxs.filter(function(x){return String(x.id)!==String(editingSavId);});
   save();closeEditSav();showToast('Deleted');renderSavings();renderDashboard();
 }
+
+// ─── EDIT MEMBER ──────────────────────────────────────────────────────────────
+var editingMemberId=null;
+
+function openEditMember(id){
+  var m=members.find(function(x){return x.id===id;});
+  if(!m)return;
+  editingMemberId=id;
+  closeSettings();
+  setVal('em-name', m.name||'');
+  setVal('em-emoji',m.emoji||'👤');
+  setVal('em-color',m.color||'#3b5bdb');
+  // Build emoji picker
+  var EMOJIS=['👤', '👥', '👩', '👨', '🧑', '💑', '👶', '🧒', '👦', '👧', '🧔', '👩\u200d💼', '👨\u200d💼', '🧑\u200d💼', '👩\u200d🍳', '👨\u200d🍳', '🧑\u200d🎓', '👩\u200d🎓', '👨\u200d🎓', '🦸', '🧙', '🦁', '🐱', '🐶', '🦊', '🐼', '🐨', '🐸', '🦋', '⭐', '🎯', '🐯'];
+  var epEl=document.getElementById('em-emoji-picker');
+  if(epEl)epEl.innerHTML=EMOJIS.map(function(e){
+    return '<button type="button" onclick="selectEmMoji(this,\''+e+'\')" style="font-size:20px;padding:5px 9px;border:1.5px solid '+(e===m.emoji?'var(--blue)':'var(--border2)')+';border-radius:var(--radius);background:none;cursor:pointer">'+e+'</button>';
+  }).join('');
+  document.getElementById('edit-member-modal').classList.add('open');
+}
+
+function closeEditMember(){
+  document.getElementById('edit-member-modal').classList.remove('open');
+  editingMemberId=null;
+}
+
+function selectEmMoji(btn,emoji){
+  document.querySelectorAll('#em-emoji-picker button').forEach(function(b){b.style.borderColor='var(--border2)';});
+  btn.style.borderColor='var(--blue)';
+  setVal('em-emoji',emoji);
+}
+
+function saveEditMember(){
+  var name=document.getElementById('em-name').value.trim();
+  if(!name){showToast('⚠️ Enter a name');return;}
+  var idx=members.findIndex(function(x){return x.id===editingMemberId;});
+  if(idx===-1)return;
+  members[idx]={...members[idx],
+    name:name,
+    emoji:document.getElementById('em-emoji').value||'👤',
+    color:document.getElementById('em-color').value||'#3b5bdb'
+  };
+  save();closeEditMember();
+  renderSettingsMembers();renderMemberSwitcher();populateMemberSelects();
+  showToast('✅ Member updated!');
+}
+
+function deleteEditMember(){
+  members=members.filter(function(x){return x.id!==editingMemberId;});
+  if(activeMember===editingMemberId)activeMember='all';
+  save();closeEditMember();
+  renderSettingsMembers();renderMemberSwitcher();populateMemberSelects();renderDashboard();
+  showToast('Member removed');
+}
+
+// ─── SIDE BY SIDE ALLOCATION (All view) ──────────────────────────────────────
+function renderSideBySideAlloc(){
+  var container = document.getElementById('alloc-summary-cards');
+  if(!container) return;
+  if(activeMember !== 'all') return; // only for All view
+  if(!members.length){ container.innerHTML='<div class="alloc-sum-no-income">Add members to see side-by-side view</div>'; return; }
+
+  var incomeVal = parseFloat(document.getElementById('alloc-summary-income') ? document.getElementById('alloc-summary-income').value : 0) || 0;
+  var m = thisMonth();
+
+  var html = '<div class="member-alloc-grid">';
+  members.forEach(function(mem){
+    var allocs = getAllocsForMember(mem.id);
+    var hasCustom = memberAllocs[mem.id] && memberAllocs[mem.id].length > 0;
+    var memIncome = incomeVal > 0 ? incomeVal / members.length : 0; // split equally if not per-member income yet
+
+    // Try to get member's actual income from transactions
+    var actualIncome = txs.filter(function(t){ return t.type==='income' && t.date.startsWith(m) && t.memberId===mem.id; }).reduce(function(s,t){return s+t.amount;},0);
+    var useIncome = actualIncome > 0 ? actualIncome : memIncome;
+
+    var memExp = txs.filter(function(t){ return t.type==='expense' && t.date.startsWith(m) && t.memberId===mem.id; }).reduce(function(s,t){return s+t.amount;},0);
+    var memSaved = savingsTxs.filter(function(t){ return t.type==='deposit' && t.date.startsWith(m) && t.memberId===mem.id; }).reduce(function(s,t){return s+t.amount;},0);
+    var memInvested = investments.filter(function(i){ return i.date.startsWith(m) && i.memberId===mem.id; }).reduce(function(s,i){return s+i.amount;},0);
+
+    html += '<div class="member-alloc-col">';
+    html += '<div class="member-alloc-head">';
+    html += '<div class="member-alloc-avatar" style="background:'+mem.color+'22">'+mem.emoji+'</div>';
+    html += '<div><div class="member-alloc-name">'+mem.name+'</div>';
+    html += '<div class="member-alloc-plan">'+(hasCustom?'Custom plan':'Shared plan')+(useIncome>0?' · '+fmt(useIncome):'')+'</div></div>';
+    html += '</div>';
+
+    if(useIncome <= 0){
+      html += '<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0">Enter income above or tag income transactions to '+mem.name+'</div>';
+    } else {
+      allocs.forEach(function(a){
+        var target = useIncome * (a.pct/100);
+        var n = a.name.toLowerCase();
+        var used = n.includes('invest') ? memInvested : n.includes('sav') ? memSaved : memExp;
+        // For Needs/Wants use proportional share of expenses (by bucket)
+        var bucketExp = txs.filter(function(t){
+          return t.type==='expense' && t.date.startsWith(m) && t.memberId===mem.id &&
+            (t.bucket||autoBucket(t.name)||'').toLowerCase()===a.name.toLowerCase();
+        }).reduce(function(s,t){return s+t.amount;},0);
+        if(!n.includes('invest') && !n.includes('sav')) used = bucketExp;
+
+        var pct = target > 0 ? Math.min(200, Math.round(used/target*100)) : 0;
+        var isOver = used > target;
+        var barColor = isOver ? 'var(--red)' : pct >= 80 ? 'var(--amber)' : a.color || 'var(--teal)';
+        var barWidth = Math.min(100, pct);
+
+        html += '<div class="member-alloc-bucket">';
+        html += '<div class="member-alloc-brow"><span class="member-alloc-bname">'+a.name+'</span><span class="member-alloc-bpct">'+a.pct+'%</span></div>';
+        html += '<div class="member-alloc-bar-bg"><div class="member-alloc-bar" style="width:'+barWidth+'%;background:'+barColor+'"></div></div>';
+        html += '<div class="member-alloc-vals" style="color:'+(isOver?'var(--red)':'var(--text3)')+'">'+fmt(used)+' / '+fmt(target)+(isOver?' <strong>over</strong>':'')+'</div>';
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ─── SPENDING OVERVIEW ────────────────────────────────────────────────────────
+function openSpendingOverview(){
+  renderSpendingOverview();
+  document.getElementById('spending-overview-modal').classList.add('open');
+}
+function closeSpendingOverview(){
+  document.getElementById('spending-overview-modal').classList.remove('open');
+}
+
+function renderSpendingOverview(){
+  var el=document.getElementById('spending-overview-body');if(!el)return;
+  var m=thisMonth();
+  var mTxs=memberFilteredTxs(txs.filter(function(t){return t.date.startsWith(m);}));
+  var income=mTxs.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
+  var expense=mTxs.filter(function(t){return t.type==='expense';}).reduce(function(s,t){return s+t.amount;},0);
+  var saved=memberFilteredSavings(savingsTxs.filter(function(t){return t.type==='deposit'&&t.date.startsWith(m);})).reduce(function(s,t){return s+t.amount;},0);
+  var invested=memberFilteredInvestments(investments.filter(function(i){return i.date.startsWith(m);})).reduce(function(s,i){return s+i.amount;},0);
+  var available=income-saved-invested;
+  var remaining=available-expense;
+  var usedPct=available>0?Math.min(100,Math.round(expense/available*100)):0;
+  var memberLabel=(activeMember&&activeMember!=='all'&&activeMember!=='shared')?
+    (members.find(function(x){return x.id===activeMember;})||{emoji:'🌐',name:'All'}):
+    {emoji:'🌐',name:'All members'};
+  var monthStr=new Date().toLocaleString('default',{month:'long',year:'numeric'});
+
+  // Category breakdown with bars
+  var bycat={};
+  mTxs.filter(function(t){return t.type==='expense';}).forEach(function(t){
+    bycat[t.cat]=(bycat[t.cat]||0)+t.amount;
+  });
+  var topCat=Object.entries(bycat).sort(function(a,b){return b[1]-a[1];});
+  var catRows=topCat.map(function(e){
+    var pct=expense>0?Math.round(e[1]/expense*100):0;
+    var barColor=pct>=50?'var(--red)':pct>=30?'var(--amber)':'var(--blue)';
+    return '<div style="margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:3px">'
+      +'<span style="font-size:12px;font-weight:600">'+e[0]+'</span>'
+      +'<span style="font-size:12px;color:var(--text2)">'+fmt(e[1])+' <span style="color:var(--text3)">('+pct+'%)</span></span>'
+      +'</div>'
+      +'<div style="background:var(--surface3);border-radius:999px;height:5px">'
+      +'<div style="width:'+pct+'%;background:'+barColor+';height:5px;border-radius:999px"></div>'
+      +'</div></div>';
+  }).join('');
+
+  // Insight text
+
+
+  // Expense transactions
+  var expTxs=[...mTxs].filter(function(t){return t.type==='expense';})
+    .sort(function(a,b){return b.date.localeCompare(a.date);});
+  var txRows=expTxs.map(function(t){
+    var mBadge=t.memberId?'<span style="background:'+memberColor(t.memberId)+'22;color:'+memberColor(t.memberId)+';border-radius:999px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">'+memberEmoji(t.memberId)+' '+memberName(t.memberId)+'</span>':'';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+      +'<span style="font-size:20px">'+t.icon+'</span>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+t.name+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">'+t.date+' · '+t.cat+mBadge+'</div></div>'
+      +'<span style="font-size:13px;font-weight:600;color:var(--red);flex-shrink:0">-'+fmt(t.amount)+'</span>'
+      +'</div>';
+  }).join('');
+
+  var remainColor=remaining>=0?'var(--teal)':'var(--red)';
+
+  el.innerHTML=
+    '<div style="font-size:12px;color:var(--text3);padding:4px 0 12px">'+monthStr+' · '+memberLabel.emoji+' '+memberLabel.name+'</div>'
+
+    // ── Summary card ──
+    +'<div style="background:var(--surface2);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Summary</div>'
+    +'<div style="display:flex;flex-direction:column;gap:7px">'
+    +'<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--text2)">Income</span><span style="font-size:14px;font-weight:700;color:var(--teal)">+'+fmt(income)+'</span></div>'
+    +(saved>0?'<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--text2)">Saved (transfer)</span><span style="font-size:13px;font-weight:600;color:var(--cyan)">-'+fmt(saved)+'</span></div>':'')
+    +(invested>0?'<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--text2)">Invested</span><span style="font-size:13px;font-weight:600;color:var(--purple)">-'+fmt(invested)+'</span></div>':'')
+    +'<div style="display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid var(--border)"><span style="font-size:13px;font-weight:600">Available after saving</span><span style="font-size:14px;font-weight:700;color:var(--blue)">'+fmt(available)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--text2)">Spent</span><span style="font-size:14px;font-weight:700;color:var(--red)">-'+fmt(expense)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;padding-top:7px;border-top:1px solid var(--border)"><span style="font-size:14px;font-weight:700">Remaining</span><span style="font-size:18px;font-weight:700;color:'+remainColor+'">'+fmt(remaining)+'</span></div>'
+    +'</div></div>'
+
+    // ── Insight engine ──
+    +(income>0?(function(){
+      var spendRate = available>0 ? expense/available : 0;
+      var savingsRate = income>0 ? (saved+invested)/income : 0;
+      // Primary insight (spend)
+      var primary, primaryColor;
+      if(expense===0){
+        primaryColor='var(--teal)';
+        primary='Great start — no spending yet this month. Your full budget of '+fmt(available)+' is still available.'
+          +(invested>0?' You have invested '+fmt(invested)+' and not spent yet — strong discipline.':'');
+      } else if(spendRate<=0.4){
+        primaryColor='var(--teal)';
+        primary='You have used '+usedPct+'% of your budget — you are on track. Spending is under control. You still have '+fmt(remaining)+' remaining.';
+      } else if(spendRate<=0.8){
+        primaryColor='var(--amber)';
+        primary='You have used '+usedPct+'% of your budget — keep an eye on spending. You have '+fmt(remaining)+' left, pace yourself.';
+      } else if(spendRate<=1){
+        primaryColor='var(--red)';
+        primary='You have used '+usedPct+'% of your budget — getting close to the limit. Only '+fmt(remaining)+' remaining.';
+      } else {
+        primaryColor='var(--red)';
+        primary='You have exceeded your available budget by '+fmt(Math.abs(remaining))+'. Review your expenses.';
+      }
+      // Secondary insight (savings)
+      var secondary, secondaryColor;
+      if(savingsRate>=0.3){
+        secondaryColor='var(--teal)';
+        secondary='Strong savings — you saved '+Math.round(savingsRate*100)+'% of your income this month.'
+          +(invested>0?' You also invested '+fmt(invested)+' — great long-term focus.':'');
+      } else if(savingsRate>=0.1){
+        secondaryColor='var(--amber)';
+        secondary='You saved '+Math.round(savingsRate*100)+'% of income — consider increasing if possible.'
+          +(invested>0?' You invested '+fmt(invested)+' this month.':'');
+      } else if(savingsRate>0){
+        secondaryColor='var(--amber)';
+        secondary='Savings are low this month ('+Math.round(savingsRate*100)+'%) — try setting aside more.'
+          +(invested>0?' You invested '+fmt(invested)+' — good start.':'');
+      } else if(invested>0){
+        secondaryColor='var(--blue)';
+        secondary='You invested '+fmt(invested)+' this month — great long-term focus. Consider also adding a savings transfer.';
+      } else {
+        secondaryColor='var(--text3)';
+        secondary='No savings or investments recorded this month. Tag your savings deposits or investments to track them.';
+      }
+      return '<div style="border-radius:var(--radius-lg);border:1.5px solid '+primaryColor+'44;margin-bottom:12px;overflow:hidden">'
+        +'<div style="background:'+primaryColor+'18;padding:11px 14px;border-bottom:1px solid '+primaryColor+'22">'
+        +'<div style="font-size:11px;font-weight:700;color:'+primaryColor+';text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">💡 Budget</div>'
+        +'<div style="font-size:12px;color:var(--text2);line-height:1.6">'+primary+'</div>'
+        +(topCat.length?'<div style="font-size:11px;color:var(--text3);margin-top:4px">Top: <strong style="color:var(--text)">'+topCat[0][0]+'</strong> — '+fmt(topCat[0][1])+'  ('+Math.round(topCat[0][1]/expense*100)+'% of spend)</div>':'')
+        +'</div>'
+        +'<div style="background:'+secondaryColor+'11;padding:11px 14px">'
+        +'<div style="font-size:11px;font-weight:700;color:'+secondaryColor+';text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">💰 Savings</div>'
+        +'<div style="font-size:12px;color:var(--text2);line-height:1.6">'+secondary+'</div>'
+        +'</div></div>';
+    })():'')
+
+    // ── Category breakdown ──
+    +(catRows?'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">By category</div>'+catRows+'<div style="margin-bottom:12px"></div>':'')
+
+    // ── Transactions ──
+    +(txRows?'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Expenses</div>'+txRows
+    :'<div style="text-align:center;padding:20px;color:var(--text3)">No expenses this month</div>');
+}
+
 // ─── TOAST ────────────────────────────────────────────────────────────────────
+
+function toggleHelp(id){
+  var body=document.getElementById(id);
+  var chev=document.getElementById('chev-'+id);
+  if(!body)return;
+  var open=body.style.display==='block';
+  body.style.display=open?'none':'block';
+  if(chev)chev.classList.toggle('open',!open);
+}
+
+
+function openMemberAllocModal(){
+  closeSettings();
+  // Default: each member inherits shared plan if no custom one set
+  renderMallocTabs();
+  document.getElementById('member-alloc-modal').classList.add('open');
+}
+
+function closeMemberAllocModal(){
+  document.getElementById('member-alloc-modal').classList.remove('open');
+}
+
+var mallocActiveMember = null;
+
+function renderMallocTabs(){
+  var tabsEl = document.getElementById('malloc-tabs');
+  var bodyEl = document.getElementById('malloc-body');
+  if(!tabsEl || !bodyEl) return;
+
+  // Build tabs: one per member
+  if(!mallocActiveMember || !members.find(function(m){return m.id===mallocActiveMember;})){
+    mallocActiveMember = members[0]?.id || null;
+  }
+
+  tabsEl.innerHTML = members.map(function(m){
+    var isActive = m.id === mallocActiveMember;
+    var hasCustom = memberAllocs[m.id] && memberAllocs[m.id].length > 0;
+    return '<button data-mid="'+m.id+'" onclick="switchMallocTab(this.dataset.mid)" style="padding:7px 14px;border-radius:999px;border:1.5px solid '+(isActive?m.color:'var(--border2)')+';background:'+(isActive?m.color:'none')+';color:'+(isActive?'#fff':m.color)+';font-size:12px;font-weight:600;cursor:pointer;margin-right:6px;margin-bottom:6px">'
+      +m.emoji+' '+m.name+(hasCustom?' ✓':'')+'</button>';
+  }).join('');
+
+  renderMallocBody();
+}
+
+function switchMallocTab(mid){
+  mallocActiveMember = mid;
+  renderMallocTabs();
+}
+
+function renderMallocBody(){
+  var bodyEl = document.getElementById('malloc-body');
+  if(!bodyEl || !mallocActiveMember) return;
+  var m = members.find(function(x){return x.id===mallocActiveMember;});
+  if(!m){ bodyEl.innerHTML=''; return; }
+
+  var allocs = memberAllocs[mallocActiveMember];
+  var usingShared = !allocs || allocs.length===0;
+  var displayAllocs = usingShared ? savAllocs.map(function(a){return {...a};}) : allocs;
+  var total = displayAllocs.reduce(function(s,a){return s+a.pct;},0);
+
+  bodyEl.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">'
+    +'<span style="font-size:12px;color:var(--text2);flex:1">'+(usingShared?'<em>Using shared plan</em>. Customise below to override for '+m.emoji+' '+m.name+'.':'Custom plan for '+m.emoji+' '+m.name+'.'+'</span>')
+    +'<button data-mid="'+mallocActiveMember+'" onclick="resetMallocToShared(this.dataset.mid)" style="font-size:11px;padding:4px 10px;border:1px solid var(--border2);border-radius:6px;background:none;color:var(--text3);cursor:pointer"'+(usingShared?' disabled':'')+'">↩ Reset to shared</button>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px" id="malloc-rows">'
+    +displayAllocs.map(function(a,i){
+      return '<div style="display:flex;align-items:center;gap:8px">'
+        +'<input type="color" value="'+a.color+'" data-mi="'+mallocActiveMember+'" data-ai="'+a.id+'" oninput="updateMallocColor(this.dataset.mi,this.dataset.ai,this.value)" style="width:36px;height:36px;padding:2px;border-radius:6px;border:1.5px solid var(--border2);cursor:pointer"/>'
+        +'<input type="text" value="'+a.name+'" data-mi="'+mallocActiveMember+'" data-ai="'+a.id+'" oninput="updateMallocName(this.dataset.mi,this.dataset.ai,this.value)" style="flex:1;padding:7px 10px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--surface);color:var(--text)"/>'
+        +'<div style="display:flex;align-items:center;gap:4px"><input type="number" value="'+a.pct+'" min="0" max="100" data-mi="'+mallocActiveMember+'" data-ai="'+a.id+'" oninput="updateMallocPct(this.dataset.mi,this.dataset.ai,+this.value)" style="width:60px;padding:7px 8px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:700;background:var(--surface);color:var(--text)"/><span style="font-size:13px;color:var(--text2)">%</span></div>'
+        +'<button data-mi="'+mallocActiveMember+'" data-ai="'+a.id+'" onclick="deleteMallocBucket(this.dataset.mi,this.dataset.ai)" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3);padding:4px">✕</button>'
+        +'</div>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px;align-items:center">'
+    +'<button data-mid="'+mallocActiveMember+'" onclick="addMallocBucket(this.dataset.mid)" style="padding:7px 14px;border:1.5px dashed var(--border2);border-radius:var(--radius);background:none;color:var(--text2);font-size:12px;cursor:pointer">+ Add bucket</button>'
+    +'<button data-mid="'+mallocActiveMember+'" onclick="autoBalanceMalloc(this.dataset.mid)" style="padding:7px 14px;border:1.5px solid var(--border2);border-radius:var(--radius);background:none;color:var(--text2);font-size:12px;cursor:pointer">⚖️ Auto-balance</button>'
+    +'<span style="margin-left:auto;font-size:12px;font-weight:700;color:'+(total===100?'var(--teal)':'var(--red)')+'">Total: '+total+'%</span>'
+    +'</div>';
+}
+
+function ensureMallocCustom(mid){
+  if(!memberAllocs[mid] || memberAllocs[mid].length===0){
+    // Copy shared plan as starting point
+    memberAllocs[mid] = savAllocs.map(function(a){return {id:a.id,name:a.name,pct:a.pct,color:a.color};});
+  }
+}
+
+function updateMallocName(mid,aid,val){
+  ensureMallocCustom(mid);
+  var a=memberAllocs[mid].find(function(x){return x.id===aid;});
+  if(a){a.name=val;saveMallocs();}
+}
+function updateMallocPct(mid,aid,val){
+  ensureMallocCustom(mid);
+  var a=memberAllocs[mid].find(function(x){return x.id===aid;});
+  if(a){a.pct=Math.max(0,Math.min(100,val||0));saveMallocs();renderMallocBody();}
+}
+function updateMallocColor(mid,aid,val){
+  ensureMallocCustom(mid);
+  var a=memberAllocs[mid].find(function(x){return x.id===aid;});
+  if(a){a.color=val;saveMallocs();}
+}
+function addMallocBucket(mid){
+  ensureMallocCustom(mid);
+  var colors=['#e64980','#74b816','#f76707','#1971c2','#862e9c'];
+  var used=memberAllocs[mid].map(function(a){return a.color;});
+  var col=colors.find(function(c){return !used.includes(c);})||'#868e96';
+  memberAllocs[mid].push({id:'ma'+Date.now(),name:'New bucket',pct:0,color:col});
+  saveMallocs();renderMallocBody();
+}
+function deleteMallocBucket(mid,aid){
+  if(!memberAllocs[mid])return;
+  memberAllocs[mid]=memberAllocs[mid].filter(function(a){return a.id!==aid;});
+  saveMallocs();renderMallocBody();
+}
+function autoBalanceMalloc(mid){
+  ensureMallocCustom(mid);
+  var n=memberAllocs[mid].length;if(!n)return;
+  var base=Math.floor(100/n);var rem=100-base*n;
+  memberAllocs[mid].forEach(function(a,i){a.pct=base+(i<rem?1:0);});
+  saveMallocs();renderMallocBody();showToast('⚖️ Balanced to 100%');
+}
+function resetMallocToShared(mid){
+  memberAllocs[mid]=[];
+  saveMallocs();renderMallocTabs();showToast('↩ Reset to shared plan');
+}
+function saveMallocs(){
+  localStorage.setItem('xp_mallocs',JSON.stringify(memberAllocs));
+}
+
+// Get allocation for a member (falls back to shared)
+function getAllocsForMember(mid){
+  if(mid && memberAllocs[mid] && memberAllocs[mid].length>0) return memberAllocs[mid];
+  return savAllocs;
+}
+
 function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2400);}
 
 
